@@ -37,23 +37,6 @@ func getDevicesH(a lib.Api) gin.HandlerFunc {
 	}
 }
 
-func postAddDeviceH(a lib.Api) gin.HandlerFunc {
-	return func(gc *gin.Context) {
-		var deviceBase lib_model.DeviceBase
-		err := gc.ShouldBindJSON(&deviceBase)
-		if err != nil {
-			_ = gc.Error(lib_model.NewInvalidInputError(err))
-			return
-		}
-		err = a.AddDevice(gc.Request.Context(), deviceBase)
-		if err != nil {
-			_ = gc.Error(err)
-			return
-		}
-		gc.Status(http.StatusOK)
-	}
-}
-
 func getDeviceH(a lib.Api) gin.HandlerFunc {
 	return func(gc *gin.Context) {
 		device, err := a.GetDevice(gc.Request.Context(), gc.Param(devIdParam))
@@ -62,24 +45,6 @@ func getDeviceH(a lib.Api) gin.HandlerFunc {
 			return
 		}
 		gc.JSON(http.StatusOK, device)
-	}
-}
-
-func patchUpdateDeviceH(a lib.Api) gin.HandlerFunc {
-	return func(gc *gin.Context) {
-		var deviceBase lib_model.DeviceBase
-		err := gc.ShouldBindJSON(&deviceBase)
-		if err != nil {
-			_ = gc.Error(lib_model.NewInvalidInputError(err))
-			return
-		}
-		deviceBase.ID = gc.Param(devIdParam)
-		err = a.UpdateDevice(gc.Request.Context(), deviceBase)
-		if err != nil {
-			_ = gc.Error(err)
-			return
-		}
-		gc.Status(http.StatusOK)
 	}
 }
 

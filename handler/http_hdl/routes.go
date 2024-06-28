@@ -24,11 +24,11 @@ import (
 )
 
 func SetRoutes(e *gin.Engine, a lib.Api) {
-	standardGrp := e.Group("")
-	restrictedGrp := e.Group(lib_model.RestrictedPath)
-	setDevicesRoutes(a, standardGrp.Group(lib_model.DevicesPath))
-	setRestrictedDevicesRoutes(a, restrictedGrp.Group(lib_model.DevicesPath))
-	setSrvInfoRoutes(a, standardGrp, restrictedGrp)
+	e.GET(lib_model.DevicesPath, getDevicesH(a))
+	e.GET(lib_model.DevicesPath+"/:"+devIdParam, getDeviceH(a))
+	e.PATCH(lib_model.DevicesPath+"/:"+devIdParam, patchUpdateDeviceUserDataH(a))
+	e.DELETE(lib_model.DevicesPath+"/:"+devIdParam, deleteDeviceH(a))
+	e.GET(lib_model.SrvInfoPath, getSrvInfoH(a))
 	e.GET("health-check", getServiceHealthH(a))
 }
 
@@ -48,25 +48,4 @@ func GetPathFilter() []string {
 	return []string{
 		"/health-check",
 	}
-}
-
-func setSrvInfoRoutes(a lib.Api, rGroups ...*gin.RouterGroup) {
-	for _, rg := range rGroups {
-		rg.GET(lib_model.SrvInfoPath, getSrvInfoH(a))
-	}
-}
-
-func setDevicesRoutes(a lib.Api, rg *gin.RouterGroup) {
-	rg.POST("", postAddDeviceH(a))
-	rg.GET("", getDevicesH(a))
-	rg.GET(":"+devIdParam, getDeviceH(a))
-	rg.PATCH(":"+devIdParam, patchUpdateDeviceH(a))
-	rg.DELETE(":"+devIdParam, deleteDeviceH(a))
-}
-
-func setRestrictedDevicesRoutes(a lib.Api, rg *gin.RouterGroup) {
-	rg.GET("", getDevicesH(a))
-	rg.GET(":"+devIdParam, getDeviceH(a))
-	rg.PATCH(":"+devIdParam, patchUpdateDeviceUserDataH(a))
-	rg.DELETE(":"+devIdParam, deleteDeviceH(a))
 }
