@@ -70,40 +70,6 @@ func TestHandler_Set(t *testing.T) {
 	})
 }
 
-func TestHandler_Add(t *testing.T) {
-	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
-	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
-	h := New(stgHdl, 0)
-	t.Run("does not exist", func(t *testing.T) {
-		err := h.Add(context.Background(), deviceBase)
-		if err != nil {
-			t.Error(err)
-		}
-		device, ok := stgHdl.devices[id]
-		if !ok {
-			t.Error("not created")
-		}
-		if !reflect.DeepEqual(deviceBase, device.DeviceBase) {
-			t.Error("expected\n", deviceBase, "got\n", device.DeviceBase)
-		}
-		if device.Created.IsZero() {
-			t.Error("created timestamp is zero")
-		}
-	})
-	t.Run("exist", func(t *testing.T) {
-		err := h.Add(context.Background(), deviceBase)
-		if err == nil {
-			t.Error("expected error")
-		}
-	})
-	t.Run("invalid input", func(t *testing.T) {
-		err := h.Add(context.Background(), lib_model.DeviceBase{})
-		if err == nil {
-			t.Error("expected error")
-		}
-	})
-}
-
 func TestHandler_Get(t *testing.T) {
 	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
@@ -152,41 +118,6 @@ func TestHandler_GetAll(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		stgHdl.getAllErr = errors.New("test error")
 		_, err := h.GetAll(context.Background(), lib_model.DevicesFilter{})
-		if err == nil {
-			t.Error("expected error")
-		}
-	})
-}
-
-func TestHandler_Update(t *testing.T) {
-	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
-	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
-	h := New(stgHdl, 0)
-	t.Run("does not exist", func(t *testing.T) {
-		if err := h.Update(context.Background(), deviceBase); err == nil {
-			t.Error("expected error")
-		}
-		if len(stgHdl.devices) != 0 {
-			t.Error("expected 0 entries")
-		}
-	})
-	stgHdl.devices[id] = lib_model.Device{DeviceBase: deviceBase}
-	t.Run("exists", func(t *testing.T) {
-		deviceBase2 := deviceBase
-		deviceBase2.Name = "test2"
-		if err := h.Update(context.Background(), deviceBase2); err != nil {
-			t.Error(err)
-		}
-		device := stgHdl.devices[id]
-		if !reflect.DeepEqual(deviceBase2, device.DeviceBase) {
-			t.Error("expected\n", deviceBase2, "got\n", device.DeviceBase)
-		}
-		if device.Updated.IsZero() {
-			t.Error("updated timestamp is zero")
-		}
-	})
-	t.Run("invalid input", func(t *testing.T) {
-		err := h.Update(context.Background(), lib_model.DeviceBase{})
 		if err == nil {
 			t.Error("expected error")
 		}

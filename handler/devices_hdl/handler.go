@@ -66,27 +66,6 @@ func (h *Handler) Put(ctx context.Context, deviceBase lib_model.DeviceBase) erro
 	return nil
 }
 
-func (h *Handler) Add(ctx context.Context, deviceBase lib_model.DeviceBase) error {
-	err := validateDeviceBase(deviceBase)
-	if err != nil {
-		return lib_model.NewInvalidInputError(err)
-	}
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	util.Logger.Debugf("add device (%+v)", deviceBase)
-	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
-	defer cf()
-	err = h.stgHdl.Create(ctxWt, nil, lib_model.Device{
-		DeviceBase: deviceBase,
-		Created:    time.Now().UTC(),
-	})
-	if err != nil {
-		util.Logger.Errorf("add device (%+v): %s", deviceBase, err)
-		return err
-	}
-	return nil
-}
-
 func (h *Handler) Get(ctx context.Context, id string) (lib_model.Device, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
@@ -113,32 +92,6 @@ func (h *Handler) GetAll(ctx context.Context, filter lib_model.DevicesFilter) (m
 		return nil, err
 	}
 	return devices, nil
-}
-
-func (h *Handler) Update(ctx context.Context, deviceBase lib_model.DeviceBase) error {
-	err := validateDeviceBase(deviceBase)
-	if err != nil {
-		return lib_model.NewInvalidInputError(err)
-	}
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	util.Logger.Debugf("update device (%+v)", deviceBase)
-	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
-	defer cf()
-	device, err := h.stgHdl.Read(ctxWt, deviceBase.ID)
-	if err != nil {
-		util.Logger.Errorf("update device (%+v): %s", deviceBase, err)
-		return err
-	}
-	device.DeviceBase = deviceBase
-	device.Updated = time.Now().UTC()
-	ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
-	defer cf2()
-	if err = h.stgHdl.Update(ctxWt2, nil, device); err != nil {
-		util.Logger.Errorf("update device (%+v): %s", deviceBase, err)
-		return err
-	}
-	return nil
 }
 
 func (h *Handler) UpdateUserData(ctx context.Context, id string, userDataBase lib_model.DeviceUserDataBase) error {
