@@ -57,14 +57,16 @@ func TestHandler(t *testing.T) {
 		Created: time.Now().Round(0),
 		Updated: time.Now().Round(0),
 		UserData: lib_model.DeviceUserData{
-			Name:    "test",
-			Updated: time.Now().Round(0),
-			Attributes: []lib_model.DeviceAttribute{
-				{
-					Key:   "test",
-					Value: "test",
+			DeviceUserDataBase: lib_model.DeviceUserDataBase{
+				Name: "test",
+				Attributes: []lib_model.DeviceAttribute{
+					{
+						Key:   "test",
+						Value: "test",
+					},
 				},
 			},
+			Updated: time.Now().Round(0),
 		},
 	}
 	t.Run("create device", func(t *testing.T) {

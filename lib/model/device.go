@@ -26,10 +26,14 @@ type DeviceData struct {
 	Attributes []DeviceAttribute `json:"attributes"`
 }
 
-type DeviceUserData struct {
+type DeviceUserDataBase struct {
 	Name       string            `json:"name"`
-	Updated    time.Time         `json:"updated"`
 	Attributes []DeviceAttribute `json:"attributes"`
+}
+
+type DeviceUserData struct {
+	DeviceUserDataBase
+	Updated time.Time `json:"updated"`
 }
 
 type DeviceAttribute struct {

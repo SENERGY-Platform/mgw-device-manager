@@ -11,7 +11,7 @@ type DevicesHandler interface {
 	Get(ctx context.Context, id string) (lib_model.Device, error)
 	GetAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.Device, error)
 	Update(ctx context.Context, deviceBase lib_model.DeviceBase) error
-	UpdateUserData(ctx context.Context, id string, userData lib_model.DeviceUserData) error
+	UpdateUserData(ctx context.Context, id string, userDataBase lib_model.DeviceUserDataBase) error
 	Delete(ctx context.Context, id string) error
 }
 
