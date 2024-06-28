@@ -67,6 +67,6 @@ func setDevicesRoutes(a lib.Api, rg *gin.RouterGroup) {
 func setRestrictedDevicesRoutes(a lib.Api, rg *gin.RouterGroup) {
 	rg.GET("", getDevicesH(a))
 	rg.GET(":"+devIdParam, getDeviceH(a))
-	rg.PATCH(":"+devIdParam, patchDeviceUserDataH(a))
+	rg.PATCH(":"+devIdParam, patchUpdateDeviceUserDataH(a))
 	rg.DELETE(":"+devIdParam, deleteDeviceH(a))
 }
