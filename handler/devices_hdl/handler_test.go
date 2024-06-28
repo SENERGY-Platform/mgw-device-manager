@@ -331,7 +331,7 @@ func (m *stgHdlMock) Create(_ context.Context, tx driver.Tx, device lib_model.De
 func (m *stgHdlMock) Read(_ context.Context, id string) (lib_model.Device, error) {
 	device, ok := m.devices[id]
 	if !ok {
-		return device, errors.New("not found")
+		return device, lib_model.NewNotFoundError(errors.New("not found"))
 	}
 	return device, nil
 }
@@ -349,7 +349,7 @@ func (m *stgHdlMock) Update(_ context.Context, tx driver.Tx, device lib_model.De
 	}
 	_, ok := m.devices[device.ID]
 	if !ok {
-		return errors.New("not found")
+		return lib_model.NewNotFoundError(errors.New("not found"))
 	}
 	m.devices[device.ID] = device
 	return nil
@@ -361,7 +361,7 @@ func (m *stgHdlMock) Delete(_ context.Context, tx driver.Tx, id string) error {
 	}
 	_, ok := m.devices[id]
 	if !ok {
-		return errors.New("not found")
+		return lib_model.NewNotFoundError(errors.New("not found"))
 	}
 	delete(m.devices, id)
 	return nil
