@@ -107,9 +107,7 @@ func (h *Handler) UpdateUserData(ctx context.Context, id string, userDataBase li
 	if err := validateAttributes(userDataBase.Attributes); err != nil {
 		return lib_model.NewInvalidInputError(err)
 	}
-	if !h.mu.TryLock() {
-		return lib_model.NewResourceBusyError(errors.New("acquiring lock failed"))
-	}
+	h.mu.Lock()
 	defer h.mu.Unlock()
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
