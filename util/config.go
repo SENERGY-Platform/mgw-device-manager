@@ -30,6 +30,7 @@ type Config struct {
 	MGWDeploymentID string               `json:"mgw_deployment_id" env_var:"MGW_DID"`
 	MQTTLog         bool                 `json:"mqtt_log" env_var:"MQTT_LOG"`
 	MQTTDebugLog    bool                 `json:"mqtt_debug_log" env_var:"MQTT_DEBUG_LOG"`
+	ServerPort      uint                 `json:"server_port" env_var:"SERVER_PORT"`
 }
 
 var defaultMqttClientConfig = MqttClientConfig{
@@ -56,6 +57,7 @@ func NewConfig(path string) (*Config, error) {
 			SchemaPath: "include/storage_schema.sql",
 		},
 		MqttClient: defaultMqttClientConfig,
+		ServerPort: 80,
 	}
 	err := sb_util.LoadConfig(path, &cfg, nil, nil, nil)
 	return &cfg, err
