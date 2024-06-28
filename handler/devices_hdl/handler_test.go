@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
+	sb_util "github.com/SENERGY-Platform/go-service-base/util"
 	lib_model "github.com/SENERGY-Platform/mgw-device-manager/lib/model"
+	"github.com/SENERGY-Platform/mgw-device-manager/util"
 	"reflect"
 	"testing"
 )
@@ -27,6 +29,7 @@ var deviceBase = lib_model.DeviceBase{
 }
 
 func TestHandler_Set(t *testing.T) {
+	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
 	h := New(stgHdl, 0)
 	t.Run("does not exist", func(t *testing.T) {
@@ -68,6 +71,7 @@ func TestHandler_Set(t *testing.T) {
 }
 
 func TestHandler_Add(t *testing.T) {
+	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
 	h := New(stgHdl, 0)
 	t.Run("does not exist", func(t *testing.T) {
@@ -101,6 +105,7 @@ func TestHandler_Add(t *testing.T) {
 }
 
 func TestHandler_Get(t *testing.T) {
+	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
 	h := New(stgHdl, 0)
 	t.Run("does not exist", func(t *testing.T) {
@@ -122,6 +127,7 @@ func TestHandler_Get(t *testing.T) {
 }
 
 func TestHandler_GetAll(t *testing.T) {
+	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
 	h := New(stgHdl, 0)
 	t.Run("no entries", func(t *testing.T) {
@@ -153,6 +159,7 @@ func TestHandler_GetAll(t *testing.T) {
 }
 
 func TestHandler_Update(t *testing.T) {
+	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
 	h := New(stgHdl, 0)
 	t.Run("does not exist", func(t *testing.T) {
@@ -187,6 +194,7 @@ func TestHandler_Update(t *testing.T) {
 }
 
 func TestHandler_UpdateUserData(t *testing.T) {
+	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
 	h := New(stgHdl, 0)
 	userDataBase := lib_model.DeviceUserDataBase{
@@ -228,6 +236,7 @@ func TestHandler_UpdateUserData(t *testing.T) {
 }
 
 func TestHandler_Delete(t *testing.T) {
+	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
 	h := New(stgHdl, 0)
 	t.Run("does not exist", func(t *testing.T) {
