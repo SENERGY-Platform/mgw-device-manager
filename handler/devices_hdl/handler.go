@@ -26,21 +26,21 @@ func New(stgHdl handler.DevicesStorageHandler, timeout time.Duration) *Handler {
 	}
 }
 
-func (h *Handler) Set(ctx context.Context, deviceBase lib_model.DeviceBase) error {
+func (h *Handler) Put(ctx context.Context, deviceBase lib_model.DeviceBase) error {
 	err := validateDeviceBase(deviceBase)
 	if err != nil {
 		return lib_model.NewInvalidInputError(err)
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	util.Logger.Debugf("set device (%+v)", deviceBase)
+	util.Logger.Debugf("put device (%+v)", deviceBase)
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
 	device, err := h.stgHdl.Read(ctxWt, deviceBase.ID)
 	if err != nil {
 		var nfe *lib_model.NotFoundError
 		if !errors.As(err, &nfe) {
-			util.Logger.Errorf("set device (%+v): %s", deviceBase, err)
+			util.Logger.Errorf("put device (%+v): %s", deviceBase, err)
 			return err
 		}
 		ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
@@ -50,7 +50,7 @@ func (h *Handler) Set(ctx context.Context, deviceBase lib_model.DeviceBase) erro
 			Created:    time.Now().UTC(),
 		})
 		if err != nil {
-			util.Logger.Errorf("set device (%+v): %s", deviceBase, err)
+			util.Logger.Errorf("put device (%+v): %s", deviceBase, err)
 			return err
 		}
 		return nil
@@ -60,7 +60,7 @@ func (h *Handler) Set(ctx context.Context, deviceBase lib_model.DeviceBase) erro
 	ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
 	defer cf2()
 	if err = h.stgHdl.Update(ctxWt2, nil, device); err != nil {
-		util.Logger.Errorf("set device (%+v): %s", deviceBase, err)
+		util.Logger.Errorf("put device (%+v): %s", deviceBase, err)
 		return err
 	}
 	return nil

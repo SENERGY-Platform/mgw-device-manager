@@ -33,7 +33,7 @@ func TestHandler_Set(t *testing.T) {
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
 	h := New(stgHdl, 0)
 	t.Run("does not exist", func(t *testing.T) {
-		err := h.Set(context.Background(), deviceBase)
+		err := h.Put(context.Background(), deviceBase)
 		if err != nil {
 			t.Error(err)
 		}
@@ -51,7 +51,7 @@ func TestHandler_Set(t *testing.T) {
 	t.Run("exist", func(t *testing.T) {
 		deviceBase2 := deviceBase
 		deviceBase2.Name = "test2"
-		if err := h.Set(context.Background(), deviceBase2); err != nil {
+		if err := h.Put(context.Background(), deviceBase2); err != nil {
 			t.Error(err)
 		}
 		device := stgHdl.devices[id]
@@ -63,7 +63,7 @@ func TestHandler_Set(t *testing.T) {
 		}
 	})
 	t.Run("invalid input", func(t *testing.T) {
-		err := h.Set(context.Background(), lib_model.DeviceBase{})
+		err := h.Put(context.Background(), lib_model.DeviceBase{})
 		if err == nil {
 			t.Error("expected error")
 		}
