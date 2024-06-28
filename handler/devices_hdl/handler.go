@@ -23,6 +23,35 @@ func New(stgHdl handler.DevicesStorageHandler, timeout time.Duration) *Handler {
 	}
 }
 
+func (h *Handler) Set(ctx context.Context, deviceBase lib_model.DeviceBase) error {
+	err := validateDeviceBase(deviceBase)
+	if err != nil {
+		return lib_model.NewInvalidInputError(err)
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
+	defer cf()
+	device, err := h.stgHdl.Read(ctxWt, deviceBase.ID)
+	if err != nil {
+		var nfe *lib_model.NotFoundError
+		if !errors.As(err, &nfe) {
+			return err
+		}
+		ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
+		defer cf2()
+		return h.stgHdl.Create(ctxWt2, nil, lib_model.Device{
+			DeviceBase: deviceBase,
+			Created:    time.Now().UTC(),
+		})
+	}
+	device.DeviceBase = deviceBase
+	device.Updated = time.Now().UTC()
+	ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
+	defer cf2()
+	return h.stgHdl.Update(ctxWt2, nil, device)
+}
+
 func (h *Handler) Add(ctx context.Context, deviceBase lib_model.DeviceBase) error {
 	err := validateDeviceBase(deviceBase)
 	if err != nil {
