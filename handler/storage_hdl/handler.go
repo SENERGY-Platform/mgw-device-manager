@@ -90,7 +90,7 @@ func (h *Handler) ReadAll(ctx context.Context, filter lib_model.DevicesFilter) (
 	return devices, nil
 }
 
-func (h *Handler) Create(ctx context.Context, txItf driver.Tx, device lib_model.Device) error {
+func (h *Handler) Create(ctx context.Context, txItf driver.Tx, device lib_model.DeviceBase) error {
 	var tx *sql.Tx
 	if txItf != nil {
 		tx = txItf.(*sql.Tx)
@@ -101,17 +101,12 @@ func (h *Handler) Create(ctx context.Context, txItf driver.Tx, device lib_model.
 		}
 		defer tx.Rollback()
 	}
-	_, err := tx.ExecContext(ctx, "INSERT INTO devices (id, ref, name, state, type, created, updated, usr_name, usr_updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);", device.ID, device.Ref, device.Name, device.State, device.Type, timeToString(device.Created), timeToString(device.Updated), device.UserData.Name, timeToString(device.UserData.Updated))
+	_, err := tx.ExecContext(ctx, "INSERT INTO devices (id, ref, name, state, type, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?);", device.ID, device.Ref, device.Name, device.State, device.Type, timeToString(device.Created), timeToString(device.Updated))
 	if err != nil {
 		return lib_model.NewInternalError(err)
 	}
 	if len(device.Attributes) > 0 {
 		if err = insertAttributes(ctx, tx.PrepareContext, device.ID, false, device.Attributes); err != nil {
-			return err
-		}
-	}
-	if len(device.UserData.Attributes) > 0 {
-		if err = insertAttributes(ctx, tx.PrepareContext, device.ID, true, device.UserData.Attributes); err != nil {
 			return err
 		}
 	}

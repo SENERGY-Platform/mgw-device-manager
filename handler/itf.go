@@ -17,7 +17,7 @@ type DevicesHandler interface {
 
 type DevicesStorageHandler interface {
 	BeginTransaction(ctx context.Context) (driver.Tx, error)
-	Create(ctx context.Context, tx driver.Tx, device lib_model.Device) error
+	Create(ctx context.Context, tx driver.Tx, device lib_model.DeviceBase) error
 	Read(ctx context.Context, id string) (lib_model.Device, error)
 	ReadAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.Device, error)
 	Update(ctx context.Context, tx driver.Tx, deviceBase lib_model.DeviceBase) error

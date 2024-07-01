@@ -72,13 +72,13 @@ func TestHandler(t *testing.T) {
 		},
 	}
 	t.Run("create device", func(t *testing.T) {
-		err = h.Create(context.Background(), nil, a)
+		err = h.Create(context.Background(), nil, a.DeviceBase)
 		if err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("create device exists", func(t *testing.T) {
-		err = h.Create(context.Background(), nil, a)
+		err = h.Create(context.Background(), nil, a.DeviceBase)
 		if err == nil {
 			t.Error("expected error")
 		}
@@ -88,8 +88,8 @@ func TestHandler(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if !reflect.DeepEqual(a, b) {
-			t.Error("expected\n", a, "got\n", b)
+		if !reflect.DeepEqual(a.DeviceBase, b.DeviceBase) {
+			t.Error("expected\n", a.DeviceBase, "got\n", b.DeviceBase)
 		}
 	})
 	t.Run("read device does not exist", func(t *testing.T) {
@@ -117,8 +117,8 @@ func TestHandler(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if !reflect.DeepEqual(a, b) {
-			t.Error("expected\n", a, "got\n", b)
+		if !reflect.DeepEqual(a.DeviceBase, b.DeviceBase) {
+			t.Error("expected\n", a.DeviceBase, "got\n", b.DeviceBase)
 		}
 	})
 	t.Run("update device does not exist", func(t *testing.T) {
