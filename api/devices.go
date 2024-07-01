@@ -18,5 +18,5 @@ func (a *Api) DeleteDevice(ctx context.Context, id string) error {
 }
 
 func (a *Api) UpdateDeviceUserData(ctx context.Context, id string, userDataBase lib_model.DeviceUserDataBase) error {
-	return a.devicesHdl.UpdateUserData(ctx, id, userDataBase)
+	return a.devicesHdl.SetUserData(ctx, id, userDataBase)
 }
