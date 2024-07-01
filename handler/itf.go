@@ -7,11 +7,11 @@ import (
 )
 
 type DevicesHandler interface {
-	Put(ctx context.Context, deviceBase lib_model.DeviceBase) error
+	Put(ctx context.Context, deviceData lib_model.DeviceData) error
 	Get(ctx context.Context, id string) (lib_model.Device, error)
 	GetAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.Device, error)
-	UpdateUserData(ctx context.Context, id string, userDataBase lib_model.DeviceUserDataBase) error
-	UpdateStates(ctx context.Context, state lib_model.DeviceState, ref string) error
+	SetUserData(ctx context.Context, id string, userDataBase lib_model.DeviceUserDataBase) error
+	SetStates(ctx context.Context, ref string, state lib_model.DeviceState) error
 	Delete(ctx context.Context, id string) error
 }
 

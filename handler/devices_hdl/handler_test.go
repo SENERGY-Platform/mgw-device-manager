@@ -9,20 +9,23 @@ import (
 	"github.com/SENERGY-Platform/mgw-device-manager/util"
 	"reflect"
 	"testing"
+	"time"
 )
 
 var id = "1"
 var deviceBase = lib_model.DeviceBase{
-	ID:  id,
-	Ref: "test",
 	DeviceData: lib_model.DeviceData{
-		Name:  "test",
-		State: lib_model.Online,
-		Type:  "test",
-		Attributes: []lib_model.DeviceAttribute{
-			{
-				Key:   "a",
-				Value: "b",
+		ID:  id,
+		Ref: "test",
+		DeviceDataBase: lib_model.DeviceDataBase{
+			Name:  "test",
+			State: lib_model.Online,
+			Type:  "test",
+			Attributes: []lib_model.DeviceAttribute{
+				{
+					Key:   "a",
+					Value: "b",
+				},
 			},
 		},
 	},
@@ -33,7 +36,7 @@ func TestHandler_Set(t *testing.T) {
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
 	h := New(stgHdl, 0)
 	t.Run("does not exist", func(t *testing.T) {
-		err := h.Put(context.Background(), deviceBase)
+		err := h.Put(context.Background(), deviceBase.DeviceData)
 		if err != nil {
 			t.Error(err)
 		}
@@ -41,8 +44,8 @@ func TestHandler_Set(t *testing.T) {
 		if !ok {
 			t.Error("not created")
 		}
-		if !reflect.DeepEqual(deviceBase, device.DeviceBase) {
-			t.Error("expected\n", deviceBase, "got\n", device.DeviceBase)
+		if !reflect.DeepEqual(deviceBase.DeviceData, device.DeviceData) {
+			t.Error("expected\n", deviceBase.DeviceData, "got\n", device.DeviceData)
 		}
 		if device.Created.IsZero() {
 			t.Error("created timestamp is zero")
@@ -51,19 +54,19 @@ func TestHandler_Set(t *testing.T) {
 	t.Run("exist", func(t *testing.T) {
 		deviceBase2 := deviceBase
 		deviceBase2.Name = "test2"
-		if err := h.Put(context.Background(), deviceBase2); err != nil {
+		if err := h.Put(context.Background(), deviceBase2.DeviceData); err != nil {
 			t.Error(err)
 		}
 		device := stgHdl.devices[id]
-		if !reflect.DeepEqual(deviceBase2, device.DeviceBase) {
-			t.Error("expected\n", deviceBase2, "got\n", device.DeviceBase)
+		if !reflect.DeepEqual(deviceBase2.DeviceData, device.DeviceData) {
+			t.Error("expected\n", deviceBase2.DeviceData, "got\n", device.DeviceData)
 		}
 		if device.Updated.IsZero() {
 			t.Error("updated timestamp is zero")
 		}
 	})
 	t.Run("invalid input", func(t *testing.T) {
-		err := h.Put(context.Background(), lib_model.DeviceBase{})
+		err := h.Put(context.Background(), lib_model.DeviceData{})
 		if err == nil {
 			t.Error("expected error")
 		}
@@ -138,7 +141,7 @@ func TestHandler_UpdateUserData(t *testing.T) {
 		},
 	}
 	t.Run("does not exist", func(t *testing.T) {
-		if err := h.UpdateUserData(context.Background(), id, userDataBase); err == nil {
+		if err := h.SetUserData(context.Background(), id, userDataBase); err == nil {
 			t.Error("expected error")
 		}
 		if len(stgHdl.devices) != 0 {
@@ -147,7 +150,7 @@ func TestHandler_UpdateUserData(t *testing.T) {
 	})
 	t.Run("exists", func(t *testing.T) {
 		stgHdl.devices[id] = lib_model.Device{DeviceBase: deviceBase}
-		if err := h.UpdateUserData(context.Background(), id, userDataBase); err != nil {
+		if err := h.SetUserData(context.Background(), id, userDataBase); err != nil {
 			t.Error(err)
 		}
 		device := stgHdl.devices[id]
@@ -159,7 +162,33 @@ func TestHandler_UpdateUserData(t *testing.T) {
 		}
 	})
 	t.Run("invalid input", func(t *testing.T) {
-		err := h.UpdateUserData(context.Background(), id, lib_model.DeviceUserDataBase{Attributes: []lib_model.DeviceAttribute{{Value: "test"}}})
+		err := h.SetUserData(context.Background(), id, lib_model.DeviceUserDataBase{Attributes: []lib_model.DeviceAttribute{{Value: "test"}}})
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+}
+
+func TestHandler_SetStates(t *testing.T) {
+	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
+	stgHdl := &stgHdlMock{
+		devices: map[string]lib_model.Device{
+			id: {DeviceBase: deviceBase},
+		},
+	}
+	h := New(stgHdl, 0)
+	if err := h.SetStates(context.Background(), "test", lib_model.Online); err != nil {
+		t.Error(err)
+	}
+	device := stgHdl.devices[id]
+	if device.State != lib_model.Online {
+		t.Error("expected\n", lib_model.Online, "got\n", device.State)
+	}
+	if device.Updated == deviceBase.Updated {
+		t.Error("timestamp not updated")
+	}
+	t.Run("invalid input", func(t *testing.T) {
+		err := h.SetStates(context.Background(), "", "test")
 		if err == nil {
 			t.Error("expected error")
 		}
@@ -187,10 +216,10 @@ func TestHandler_Delete(t *testing.T) {
 }
 
 func Test_validateDeviceBase(t *testing.T) {
-	dBase := lib_model.DeviceBase{
+	dData := lib_model.DeviceData{
 		ID:  "test",
 		Ref: "test",
-		DeviceData: lib_model.DeviceData{
+		DeviceDataBase: lib_model.DeviceDataBase{
 			State: lib_model.Online,
 			Type:  "test",
 			Attributes: []lib_model.DeviceAttribute{
@@ -202,42 +231,42 @@ func Test_validateDeviceBase(t *testing.T) {
 		},
 	}
 	t.Run("valid", func(t *testing.T) {
-		if err := validateDeviceBase(dBase); err != nil {
+		if err := validateDeviceData(dData); err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("invalid ID", func(t *testing.T) {
-		idb := dBase
+		idb := dData
 		idb.ID = ""
-		if err := validateDeviceBase(idb); err == nil {
+		if err := validateDeviceData(idb); err == nil {
 			t.Error("expected error")
 		}
 	})
 	t.Run("invalid type", func(t *testing.T) {
-		idb := dBase
-		idb.Type = ""
-		if err := validateDeviceBase(idb); err == nil {
+		idd := dData
+		idd.Type = ""
+		if err := validateDeviceData(idd); err == nil {
 			t.Error("expected error")
 		}
 	})
 	t.Run("invalid state", func(t *testing.T) {
-		idb := dBase
-		idb.State = "test"
-		if err := validateDeviceBase(idb); err == nil {
+		idd := dData
+		idd.State = "test"
+		if err := validateDeviceData(idd); err == nil {
 			t.Error("expected error")
 		}
 	})
 	t.Run("invalid ref", func(t *testing.T) {
-		idb := dBase
-		idb.Ref = ""
-		if err := validateDeviceBase(idb); err == nil {
+		idd := dData
+		idd.Ref = ""
+		if err := validateDeviceData(idd); err == nil {
 			t.Error("expected error")
 		}
 	})
 	t.Run("invalid attribute", func(t *testing.T) {
-		idb := dBase
-		idb.Attributes = append(idb.Attributes, lib_model.DeviceAttribute{})
-		if err := validateDeviceBase(idb); err == nil {
+		idd := dData
+		idd.Attributes = append(idd.Attributes, lib_model.DeviceAttribute{})
+		if err := validateDeviceData(idd); err == nil {
 			t.Error("expected error")
 		}
 	})
@@ -298,14 +327,14 @@ func (m *stgHdlMock) BeginTransaction(_ context.Context) (driver.Tx, error) {
 	panic("not implemented")
 }
 
-func (m *stgHdlMock) Create(_ context.Context, tx driver.Tx, device lib_model.Device) error {
+func (m *stgHdlMock) Create(_ context.Context, tx driver.Tx, dBase lib_model.DeviceBase) error {
 	if tx != nil {
 		panic("not implemented")
 	}
-	if _, ok := m.devices[device.ID]; ok {
+	if _, ok := m.devices[dBase.ID]; ok {
 		return errors.New("duplicate device")
 	}
-	m.devices[device.ID] = device
+	m.devices[dBase.ID] = lib_model.Device{DeviceBase: dBase}
 	return nil
 }
 
@@ -324,15 +353,43 @@ func (m *stgHdlMock) ReadAll(_ context.Context, _ lib_model.DevicesFilter) (map[
 	return m.devices, nil
 }
 
-func (m *stgHdlMock) Update(_ context.Context, tx driver.Tx, device lib_model.Device) error {
+func (m *stgHdlMock) Update(_ context.Context, tx driver.Tx, dBase lib_model.DeviceBase) error {
 	if tx != nil {
 		panic("not implemented")
 	}
-	_, ok := m.devices[device.ID]
+	device, ok := m.devices[dBase.ID]
 	if !ok {
 		return lib_model.NewNotFoundError(errors.New("not found"))
 	}
-	m.devices[device.ID] = device
+	device.DeviceBase = dBase
+	m.devices[dBase.ID] = device
+	return nil
+}
+
+func (m *stgHdlMock) UpdateUserData(_ context.Context, tx driver.Tx, id string, userData lib_model.DeviceUserData) error {
+	if tx != nil {
+		panic("not implemented")
+	}
+	device, ok := m.devices[id]
+	if !ok {
+		return lib_model.NewNotFoundError(errors.New("not found"))
+	}
+	device.UserData = userData
+	m.devices[id] = device
+	return nil
+}
+
+func (m *stgHdlMock) UpdateStates(_ context.Context, tx driver.Tx, ref string, state lib_model.DeviceState, timestamp time.Time) error {
+	if tx != nil {
+		panic("not implemented")
+	}
+	for _, device := range m.devices {
+		if device.Ref == ref {
+			device.State = state
+			device.Updated = timestamp
+			m.devices[device.ID] = device
+		}
+	}
 	return nil
 }
 

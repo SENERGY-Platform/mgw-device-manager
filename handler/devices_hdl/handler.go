@@ -26,41 +26,41 @@ func New(stgHdl handler.DevicesStorageHandler, timeout time.Duration) *Handler {
 	}
 }
 
-func (h *Handler) Put(ctx context.Context, deviceBase lib_model.DeviceBase) error {
-	err := validateDeviceBase(deviceBase)
+func (h *Handler) Put(ctx context.Context, deviceData lib_model.DeviceData) error {
+	err := validateDeviceData(deviceData)
 	if err != nil {
 		return lib_model.NewInvalidInputError(err)
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	util.Logger.Debugf("put device (%+v)", deviceBase)
+	util.Logger.Debugf("put device (%+v)", deviceData)
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
-	device, err := h.stgHdl.Read(ctxWt, deviceBase.ID)
+	device, err := h.stgHdl.Read(ctxWt, deviceData.ID)
 	if err != nil {
 		var nfe *lib_model.NotFoundError
 		if !errors.As(err, &nfe) {
-			util.Logger.Errorf("put device (%+v): %s", deviceBase, err)
+			util.Logger.Errorf("put device (%+v): %s", deviceData, err)
 			return err
 		}
 		ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
 		defer cf2()
-		err = h.stgHdl.Create(ctxWt2, nil, lib_model.Device{
-			DeviceBase: deviceBase,
+		err = h.stgHdl.Create(ctxWt2, nil, lib_model.DeviceBase{
+			DeviceData: deviceData,
 			Created:    time.Now().UTC(),
 		})
 		if err != nil {
-			util.Logger.Errorf("put device (%+v): %s", deviceBase, err)
+			util.Logger.Errorf("put device (%+v): %s", deviceData, err)
 			return err
 		}
 		return nil
 	}
-	device.DeviceBase = deviceBase
+	device.DeviceData = deviceData
 	device.Updated = time.Now().UTC()
 	ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
 	defer cf2()
-	if err = h.stgHdl.Update(ctxWt2, nil, device); err != nil {
-		util.Logger.Errorf("put device (%+v): %s", deviceBase, err)
+	if err = h.stgHdl.Update(ctxWt2, nil, device.DeviceBase); err != nil {
+		util.Logger.Errorf("put device (%+v): %s", deviceData, err)
 		return err
 	}
 	return nil
@@ -94,26 +94,44 @@ func (h *Handler) GetAll(ctx context.Context, filter lib_model.DevicesFilter) (m
 	return devices, nil
 }
 
-func (h *Handler) UpdateUserData(ctx context.Context, id string, userDataBase lib_model.DeviceUserDataBase) error {
+func (h *Handler) SetUserData(ctx context.Context, id string, userDataBase lib_model.DeviceUserDataBase) error {
 	if err := validateAttributes(userDataBase.Attributes); err != nil {
 		return lib_model.NewInvalidInputError(err)
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	util.Logger.Debugf("update device user data (%+v)", userDataBase)
+	util.Logger.Debugf("set device user data (%+v)", userDataBase)
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
-	device, err := h.stgHdl.Read(ctxWt, id)
+	_, err := h.stgHdl.Read(ctxWt, id)
 	if err != nil {
-		util.Logger.Errorf("update device user data (%+v): %s", userDataBase, err)
+		util.Logger.Errorf("set device user data (%+v): %s", userDataBase, err)
 		return err
 	}
-	device.UserData.DeviceUserDataBase = userDataBase
-	device.UserData.Updated = time.Now().UTC()
 	ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
 	defer cf2()
-	if err = h.stgHdl.Update(ctxWt2, nil, device); err != nil {
-		util.Logger.Errorf("update device user data (%+v): %s", userDataBase, err)
+	err = h.stgHdl.UpdateUserData(ctxWt2, nil, id, lib_model.DeviceUserData{
+		DeviceUserDataBase: userDataBase,
+		Updated:            time.Now().UTC(),
+	})
+	if err != nil {
+		util.Logger.Errorf("set device user data (%+v): %s", userDataBase, err)
+		return err
+	}
+	return nil
+}
+
+func (h *Handler) SetStates(ctx context.Context, ref string, state lib_model.DeviceState) error {
+	if !isValidDeviceState(state) {
+		return lib_model.NewInvalidInputError(errors.New("invalid state"))
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	util.Logger.Debugf("set device sates (%s %s)", ref, state)
+	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
+	defer cf()
+	if err := h.stgHdl.UpdateStates(ctxWt, nil, ref, state, time.Now().UTC()); err != nil {
+		util.Logger.Errorf("set device sates (%s %s): %s", ref, state, err)
 		return err
 	}
 	return nil
@@ -132,7 +150,7 @@ func (h *Handler) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func validateDeviceBase(dBase lib_model.DeviceBase) error {
+func validateDeviceData(dBase lib_model.DeviceData) error {
 	if dBase.ID == "" {
 		return errors.New("empty id")
 	}
