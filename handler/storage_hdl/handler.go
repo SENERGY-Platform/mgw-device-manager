@@ -166,7 +166,7 @@ func (h *Handler) Read(ctx context.Context, id string) (lib_model.Device, error)
 	return device, nil
 }
 
-func (h *Handler) Update(ctx context.Context, txItf driver.Tx, device lib_model.Device) error {
+func (h *Handler) Update(ctx context.Context, txItf driver.Tx, deviceBase lib_model.DeviceBase) error {
 	var tx *sql.Tx
 	if txItf != nil {
 		tx = txItf.(*sql.Tx)
@@ -177,7 +177,7 @@ func (h *Handler) Update(ctx context.Context, txItf driver.Tx, device lib_model.
 		}
 		defer tx.Rollback()
 	}
-	res, err := tx.ExecContext(ctx, "UPDATE devices SET ref = ?, name = ?, state = ?, type = ?, created = ?, updated = ?, usr_name = ?, usr_updated = ? WHERE `id` = ?", device.Ref, device.Name, device.State, device.Type, timeToString(device.Created), timeToString(device.Updated), device.UserData.Name, timeToString(device.UserData.Updated), device.ID)
+	res, err := tx.ExecContext(ctx, "UPDATE devices SET ref = ?, name = ?, state = ?, type = ?, created = ?, updated = ? WHERE `id` = ?", deviceBase.Ref, deviceBase.Name, deviceBase.State, deviceBase.Type, timeToString(deviceBase.Created), timeToString(deviceBase.Updated), deviceBase.ID)
 	if err != nil {
 		return lib_model.NewInternalError(err)
 	}
@@ -188,17 +188,12 @@ func (h *Handler) Update(ctx context.Context, txItf driver.Tx, device lib_model.
 	if n < 1 {
 		return lib_model.NewNotFoundError(errors.New("not found"))
 	}
-	_, err = tx.ExecContext(ctx, "DELETE FROM device_attributes WHERE dev_id = ?", device.ID)
+	_, err = tx.ExecContext(ctx, "DELETE FROM device_attributes WHERE dev_id = ? AND is_usr = ?", deviceBase.ID, false)
 	if err != nil {
 		return lib_model.NewInternalError(err)
 	}
-	if len(device.Attributes) > 0 {
-		if err = insertAttributes(ctx, tx.PrepareContext, device.ID, false, device.Attributes); err != nil {
-			return err
-		}
-	}
-	if len(device.UserData.Attributes) > 0 {
-		if err = insertAttributes(ctx, tx.PrepareContext, device.ID, true, device.UserData.Attributes); err != nil {
+	if len(deviceBase.Attributes) > 0 {
+		if err = insertAttributes(ctx, tx.PrepareContext, deviceBase.ID, false, deviceBase.Attributes); err != nil {
 			return err
 		}
 	}
@@ -206,6 +201,58 @@ func (h *Handler) Update(ctx context.Context, txItf driver.Tx, device lib_model.
 		if err = tx.Commit(); err != nil {
 			return lib_model.NewInternalError(err)
 		}
+	}
+	return nil
+}
+
+func (h *Handler) UpdateUserData(ctx context.Context, txItf driver.Tx, id string, userData lib_model.DeviceUserData) error {
+	var tx *sql.Tx
+	if txItf != nil {
+		tx = txItf.(*sql.Tx)
+	} else {
+		var e error
+		if tx, e = h.db.BeginTx(ctx, nil); e != nil {
+			return lib_model.NewInternalError(e)
+		}
+		defer tx.Rollback()
+	}
+	res, err := tx.ExecContext(ctx, "UPDATE devices SET usr_name = ?, usr_updated = ? WHERE `id` = ?", userData.Name, timeToString(userData.Updated), id)
+	if err != nil {
+		return lib_model.NewInternalError(err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return lib_model.NewInternalError(err)
+	}
+	if n < 1 {
+		return lib_model.NewNotFoundError(errors.New("not found"))
+	}
+	_, err = tx.ExecContext(ctx, "DELETE FROM device_attributes WHERE dev_id = ? AND is_usr = ?", id, true)
+	if err != nil {
+		return lib_model.NewInternalError(err)
+	}
+	if len(userData.Attributes) > 0 {
+		if err = insertAttributes(ctx, tx.PrepareContext, id, true, userData.Attributes); err != nil {
+			return err
+		}
+	}
+	if txItf == nil {
+		if err = tx.Commit(); err != nil {
+			return lib_model.NewInternalError(err)
+		}
+	}
+	return nil
+}
+
+func (h *Handler) UpdateStates(ctx context.Context, txItf driver.Tx, ref string, state lib_model.DeviceState, timestamp time.Time) error {
+	execContext := h.db.ExecContext
+	if txItf != nil {
+		tx := txItf.(*sql.Tx)
+		execContext = tx.ExecContext
+	}
+	_, err := execContext(ctx, "UPDATE devices SET state = ?, updated = ? WHERE `ref` = ?", state, timeToString(timestamp), ref)
+	if err != nil {
+		return lib_model.NewInternalError(err)
 	}
 	return nil
 }
