@@ -40,22 +40,24 @@ func TestHandler(t *testing.T) {
 	id := "1"
 	a := lib_model.Device{
 		DeviceBase: lib_model.DeviceBase{
-			ID:  id,
-			Ref: "test",
 			DeviceData: lib_model.DeviceData{
-				Name:  "test",
-				State: "test",
-				Type:  "test",
-				Attributes: []lib_model.DeviceAttribute{
-					{
-						Key:   "test",
-						Value: "test",
+				ID:  id,
+				Ref: "test",
+				DeviceDataBase: lib_model.DeviceDataBase{
+					Name:  "test",
+					State: "test",
+					Type:  "test",
+					Attributes: []lib_model.DeviceAttribute{
+						{
+							Key:   "test",
+							Value: "test",
+						},
 					},
 				},
 			},
+			Created: time.Now().Round(0),
+			Updated: time.Now().Round(0),
 		},
-		Created: time.Now().Round(0),
-		Updated: time.Now().Round(0),
 		UserData: lib_model.DeviceUserData{
 			DeviceUserDataBase: lib_model.DeviceUserDataBase{
 				Name: "test",
@@ -107,15 +109,7 @@ func TestHandler(t *testing.T) {
 			Key:   "test2",
 			Value: "test2",
 		})
-		a.UserData.Name = "test2"
-		a.UserData.Updated = time.Now().Round(0)
-		a.UserData.Attributes = []lib_model.DeviceAttribute{
-			{
-				Key:   "test2",
-				Value: "test2",
-			},
-		}
-		err = h.Update(context.Background(), nil, a)
+		err = h.Update(context.Background(), nil, a.DeviceBase)
 		if err != nil {
 			t.Error(err)
 		}
@@ -128,9 +122,53 @@ func TestHandler(t *testing.T) {
 		}
 	})
 	t.Run("update device does not exist", func(t *testing.T) {
-		err = h.Update(context.Background(), nil, lib_model.Device{DeviceBase: lib_model.DeviceBase{ID: "2"}})
+		err = h.Update(context.Background(), nil, lib_model.DeviceBase{DeviceData: lib_model.DeviceData{ID: "2"}})
 		if err == nil {
 			t.Error("expected error")
+		}
+	})
+	t.Run("update user data", func(t *testing.T) {
+		a.UserData.Name = "test2"
+		a.UserData.Updated = time.Now().Round(0)
+		a.UserData.Attributes = []lib_model.DeviceAttribute{
+			{
+				Key:   "test2",
+				Value: "test2",
+			},
+		}
+		err = h.UpdateUserData(context.Background(), nil, id, a.UserData)
+		if err != nil {
+			t.Error(err)
+		}
+		b, err := h.Read(context.Background(), id)
+		if err != nil {
+			t.Error(err)
+		}
+		if !reflect.DeepEqual(a, b) {
+			t.Error("expected\n", a, "got\n", b)
+		}
+	})
+	t.Run("update user data does not exist", func(t *testing.T) {
+		err = h.UpdateUserData(context.Background(), nil, "2", lib_model.DeviceUserData{})
+		if err == nil {
+			t.Error("expected error")
+		}
+	})
+	t.Run("update states", func(t *testing.T) {
+		ts := time.Now().Round(0)
+		err = h.UpdateStates(context.Background(), nil, "test2", lib_model.Offline, ts)
+		if err != nil {
+			t.Error(err)
+		}
+		b, err := h.Read(context.Background(), id)
+		if err != nil {
+			t.Error(err)
+		}
+		if b.State != lib_model.Offline {
+			t.Error("expected", lib_model.Offline, "got", b.State)
+		}
+		if b.Updated != ts {
+			t.Error("expected", ts, "got", b.Updated)
 		}
 	})
 	t.Run("delete device", func(t *testing.T) {
