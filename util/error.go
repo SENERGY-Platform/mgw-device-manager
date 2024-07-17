@@ -6,6 +6,10 @@ import (
 	"net/http"
 )
 
+var NotConnectedErr = errors.New("not connected")
+
+var OperationTimeoutErr = errors.New("waiting for operation timed out, might still succeed in background")
+
 func GetStatusCode(err error) int {
 	var nfe *lib_model.NotFoundError
 	if errors.As(err, &nfe) {
