@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	lib_model "github.com/SENERGY-Platform/mgw-device-manager/lib/model"
+	"time"
 )
 
 type DevicesHandler interface {
@@ -25,3 +26,21 @@ type DevicesStorageHandler interface {
 	UpdateStates(ctx context.Context, tx driver.Tx, ref string, state lib_model.DeviceState, timestamp time.Time) error
 	Delete(ctx context.Context, tx driver.Tx, id string) error
 }
+
+type MqttClient interface {
+	Subscribe(topic string, qos byte, messageHandler func(m Message)) error
+	Unsubscribe(topic string) error
+	Publish(topic string, qos byte, retained bool, payload any) error
+}
+
+type Message interface {
+	Topic() string
+	Payload() []byte
+	Timestamp() time.Time
+}
+
+type MessageRelayHandler interface {
+	Put(m Message) error
+}
+
+type MessageHandler func(m Message) error
