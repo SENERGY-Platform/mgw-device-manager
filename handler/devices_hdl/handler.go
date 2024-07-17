@@ -33,14 +33,14 @@ func (h *Handler) Put(ctx context.Context, deviceData lib_model.DeviceData) erro
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	util.Logger.Debugf("put device (%+v)", deviceData)
+	util.Logger.Debugf("%s put device (%+v)", logPrefix, deviceData)
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
 	device, err := h.stgHdl.Read(ctxWt, deviceData.ID)
 	if err != nil {
 		var nfe *lib_model.NotFoundError
 		if !errors.As(err, &nfe) {
-			util.Logger.Errorf("put device (%+v): %s", deviceData, err)
+			util.Logger.Errorf("%s put device (%+v): %s", logPrefix, deviceData, err)
 			return err
 		}
 		ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
@@ -50,7 +50,7 @@ func (h *Handler) Put(ctx context.Context, deviceData lib_model.DeviceData) erro
 			Created:    time.Now().UTC(),
 		})
 		if err != nil {
-			util.Logger.Errorf("put device (%+v): %s", deviceData, err)
+			util.Logger.Errorf("%s put device (%+v): %s", logPrefix, deviceData, err)
 			return err
 		}
 		return nil
@@ -60,7 +60,7 @@ func (h *Handler) Put(ctx context.Context, deviceData lib_model.DeviceData) erro
 	ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
 	defer cf2()
 	if err = h.stgHdl.Update(ctxWt2, nil, device.DeviceBase); err != nil {
-		util.Logger.Errorf("put device (%+v): %s", deviceData, err)
+		util.Logger.Errorf("%s put device (%+v): %s", logPrefix, deviceData, err)
 		return err
 	}
 	return nil
@@ -69,12 +69,12 @@ func (h *Handler) Put(ctx context.Context, deviceData lib_model.DeviceData) erro
 func (h *Handler) Get(ctx context.Context, id string) (lib_model.Device, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	util.Logger.Debugf("get device (%s)", id)
+	util.Logger.Debugf("%s get device (%s)", logPrefix, id)
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
 	device, err := h.stgHdl.Read(ctxWt, id)
 	if err != nil {
-		util.Logger.Errorf("get device (%s): %s", id, err)
+		util.Logger.Errorf("%s get device (%s): %s", logPrefix, id, err)
 		return lib_model.Device{}, err
 	}
 	return device, nil
@@ -83,12 +83,12 @@ func (h *Handler) Get(ctx context.Context, id string) (lib_model.Device, error) 
 func (h *Handler) GetAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.Device, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	util.Logger.Debugf("get devices (%+v)", filter)
+	util.Logger.Debugf("%s get devices (%+v)", logPrefix, filter)
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
 	devices, err := h.stgHdl.ReadAll(ctxWt, filter)
 	if err != nil {
-		util.Logger.Errorf("get devices (%+v): %s", filter, err)
+		util.Logger.Errorf("%s get devices (%+v): %s", logPrefix, filter, err)
 		return nil, err
 	}
 	return devices, nil
@@ -100,12 +100,12 @@ func (h *Handler) SetUserData(ctx context.Context, id string, userDataBase lib_m
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	util.Logger.Debugf("set device user data (%+v)", userDataBase)
+	util.Logger.Debugf("%s set device user data (%+v)", logPrefix, userDataBase)
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
 	_, err := h.stgHdl.Read(ctxWt, id)
 	if err != nil {
-		util.Logger.Errorf("set device user data (%+v): %s", userDataBase, err)
+		util.Logger.Errorf("%s set device user data (%+v): %s", logPrefix, userDataBase, err)
 		return err
 	}
 	ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
@@ -115,7 +115,7 @@ func (h *Handler) SetUserData(ctx context.Context, id string, userDataBase lib_m
 		Updated:            time.Now().UTC(),
 	})
 	if err != nil {
-		util.Logger.Errorf("set device user data (%+v): %s", userDataBase, err)
+		util.Logger.Errorf("%s set device user data (%+v): %s", logPrefix, userDataBase, err)
 		return err
 	}
 	return nil
@@ -127,11 +127,11 @@ func (h *Handler) SetStates(ctx context.Context, ref string, state lib_model.Dev
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	util.Logger.Debugf("set device sates (%s %s)", ref, state)
+	util.Logger.Debugf("%s set device sates (%s %s)", logPrefix, ref, state)
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
 	if err := h.stgHdl.UpdateStates(ctxWt, nil, ref, state, time.Now().UTC()); err != nil {
-		util.Logger.Errorf("set device sates (%s %s): %s", ref, state, err)
+		util.Logger.Errorf("%s set device sates (%s %s): %s", logPrefix, ref, state, err)
 		return err
 	}
 	return nil
@@ -140,11 +140,11 @@ func (h *Handler) SetStates(ctx context.Context, ref string, state lib_model.Dev
 func (h *Handler) Delete(ctx context.Context, id string) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	util.Logger.Debugf("delete device (%s)", id)
+	util.Logger.Debugf("%s delete device (%s)", logPrefix, id)
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
 	if err := h.stgHdl.Delete(ctxWt, nil, id); err != nil {
-		util.Logger.Errorf("delete device (%s): %s", id, err)
+		util.Logger.Errorf("%s delete device (%s): %s", logPrefix, id, err)
 		return err
 	}
 	return nil
