@@ -11,9 +11,8 @@ const (
 )
 
 const (
-	DevicesPath    = "devices"
-	RestrictedPath = "restricted"
-	SrvInfoPath    = "info"
+	DevicesPath = "devices"
+	SrvInfoPath = "info"
 )
 
 const (
