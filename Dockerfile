@@ -1,16 +1,19 @@
-FROM golang:1.22 AS builder
+FROM alpine:3.20 AS builder
 
 ARG VERSION=dev
 
-COPY . /go/src/app
-WORKDIR /go/src/app
+RUN apk add --no-cache --update go gcc g++
+
+WORKDIR /app
+ENV GOPATH /app
+COPY . /app
 
 RUN CGO_ENABLED=1 GOOS=linux go build -o manager -ldflags="-X 'main.version=$VERSION'" main.go
 
-FROM alpine:3.19
+FROM alpine:3.20
 
 RUN mkdir -p /opt/device-manager /opt/device-manager/data
 WORKDIR /opt/device-manager
-COPY --from=builder /go/src/app/manager manager
+COPY --from=builder /app/manager manager
 
 ENTRYPOINT ["./manager"]
