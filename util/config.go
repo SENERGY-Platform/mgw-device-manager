@@ -56,8 +56,9 @@ func NewConfig(path string) (*Config, error) {
 			Path:       "/opt/device-manager/data",
 			SchemaPath: "include/storage_schema.sql",
 		},
-		MqttClient: defaultMqttClientConfig,
-		ServerPort: 80,
+		MqttClient:    defaultMqttClientConfig,
+		ServerPort:    80,
+		MessageBuffer: 50000,
 	}
 	err := sb_util.LoadConfig(path, &cfg, nil, nil, nil)
 	return &cfg, err
