@@ -15,7 +15,7 @@ FROM alpine:3.20
 RUN mkdir -p /opt/device-manager /opt/device-manager/data /opt/device-manager/include
 WORKDIR /opt/device-manager
 COPY --from=builder /app/manager manager
-COPY --from=builder /go/src/app/include include
+COPY --from=builder /app/include include
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=3 CMD wget -nv -t1 --spider 'http://localhost/health-check' || exit 1
 
