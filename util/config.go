@@ -12,14 +12,14 @@ type DatabaseConfig struct {
 }
 
 type MqttClientConfig struct {
-	Server            string `json:"server" env_var:"LOCAL_MQTT_SERVER"`
-	KeepAlive         int64  `json:"keep_alive" env_var:"LOCAL_MQTT_KEEP_ALIVE"`
-	PingTimeout       int64  `json:"ping_timeout" env_var:"LOCAL_MQTT_PING_TIMEOUT"`
-	ConnectTimeout    int64  `json:"connect_timeout" env_var:"LOCAL_MQTT_CONNECT_TIMEOUT"`
-	ConnectRetryDelay int64  `json:"connect_retry_delay" env_var:"LOCAL_MQTT_CONNECT_RETRY_DELAY"`
-	MaxReconnectDelay int64  `json:"max_reconnect_delay" env_var:"LOCAL_MQTT_MAX_RECONNECT_DELAY"`
-	WaitTimeout       int64  `json:"wait_timeout" env_var:"LOCAL_MQTT_WAIT_TIMEOUT"`
-	QOSLevel          byte   `json:"qos_level" env_var:"LOCAL_MQTT_QOS_LEVEL"`
+	Server            string `json:"server" env_var:"MQTT_SERVER"`
+	KeepAlive         int64  `json:"keep_alive" env_var:"MQTT_KEEP_ALIVE"`
+	PingTimeout       int64  `json:"ping_timeout" env_var:"MQTT_PING_TIMEOUT"`
+	ConnectTimeout    int64  `json:"connect_timeout" env_var:"MQTT_CONNECT_TIMEOUT"`
+	ConnectRetryDelay int64  `json:"connect_retry_delay" env_var:"MQTT_CONNECT_RETRY_DELAY"`
+	MaxReconnectDelay int64  `json:"max_reconnect_delay" env_var:"MQTT_MAX_RECONNECT_DELAY"`
+	WaitTimeout       int64  `json:"wait_timeout" env_var:"MQTT_WAIT_TIMEOUT"`
+	QOSLevel          byte   `json:"qos_level" env_var:"MQTT_QOS_LEVEL"`
 }
 
 type Config struct {
