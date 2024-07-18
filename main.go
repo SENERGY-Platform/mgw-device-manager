@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/SENERGY-Platform/gin-middleware"
@@ -12,14 +13,20 @@ import (
 	"github.com/SENERGY-Platform/mgw-device-manager/api"
 	"github.com/SENERGY-Platform/mgw-device-manager/handler/devices_hdl"
 	"github.com/SENERGY-Platform/mgw-device-manager/handler/http_hdl"
+	"github.com/SENERGY-Platform/mgw-device-manager/handler/message_hdl"
+	"github.com/SENERGY-Platform/mgw-device-manager/handler/mqtt_hdl"
+	"github.com/SENERGY-Platform/mgw-device-manager/handler/msg_relay_hdl"
 	"github.com/SENERGY-Platform/mgw-device-manager/handler/storage_hdl"
 	lib_model "github.com/SENERGY-Platform/mgw-device-manager/lib/model"
 	"github.com/SENERGY-Platform/mgw-device-manager/util"
 	"github.com/SENERGY-Platform/mgw-device-manager/util/db"
+	"github.com/SENERGY-Platform/mgw-device-manager/util/paho_mqtt"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"syscall"
@@ -65,6 +72,10 @@ func main() {
 	watchdog.Logger = util.Logger
 	wtchdg := watchdog.New(syscall.SIGINT, syscall.SIGTERM)
 
+	if config.MQTTLog {
+		paho_mqtt.SetLogger(config.MQTTDebugLog)
+	}
+
 	sql_db_hdl.Logger = util.Logger
 	db, err := db.New(config.Database.Path)
 	if err != nil {
@@ -75,6 +86,29 @@ func main() {
 	defer db.Close()
 
 	deviceHdl := devices_hdl.New(storage_hdl.New(db), time.Duration(config.Database.Timeout))
+
+	messageHdl := message_hdl.New(deviceHdl)
+
+	messageRelayHdl := msg_relay_hdl.New(config.MessageBuffer, messageHdl.HandleMessage)
+
+	mqttHdl := mqtt_hdl.New(config.MqttClient.QOSLevel, messageRelayHdl)
+
+	mqttClientOpt := mqtt.NewClientOptions()
+	mqttClientOpt.SetConnectionAttemptHandler(func(_ *url.URL, tlsCfg *tls.Config) *tls.Config {
+		util.Logger.Infof("%s connect to broker (%s)", mqtt_hdl.LogPrefix, config.MqttClient.Server)
+		return tlsCfg
+	})
+	mqttClientOpt.SetOnConnectHandler(func(_ mqtt.Client) {
+		util.Logger.Infof("%s connected to broker (%s)", mqtt_hdl.LogPrefix, config.MqttClient.Server)
+		mqttHdl.HandleOnConnect()
+	})
+	mqttClientOpt.SetConnectionLostHandler(func(_ mqtt.Client, err error) {
+		util.Logger.Warningf("%s connection lost: %s", mqtt_hdl.LogPrefix, err)
+	})
+	paho_mqtt.SetClientOptions(mqttClientOpt, fmt.Sprintf("%s_%s", srvInfoHdl.GetName(), config.MGWDeploymentID), config.MqttClient)
+	mqttClient := paho_mqtt.NewWrapper(mqtt.NewClient(mqttClientOpt), time.Duration(config.MqttClient.WaitTimeout))
+
+	mqttHdl.SetMqttClient(mqttClient)
 
 	mApi := api.New(deviceHdl)
 
@@ -127,15 +161,11 @@ func main() {
 		return nil
 	})
 
-	go func() {
-		defer dbCF()
-		if err = sql_db_hdl.InitDB(dbCtx, db, config.Database.SchemaPath, time.Second*5, time.Duration(config.Database.Timeout)); err != nil {
-			util.Logger.Error(err)
-			ec = 1
-			wtchdg.Trigger()
-			return
-		}
-	}()
+	if err = sql_db_hdl.InitDB(dbCtx, db, config.Database.SchemaPath, time.Second*5, time.Duration(config.Database.Timeout)); err != nil {
+		util.Logger.Error(err)
+		ec = 1
+		return
+	}
 
 	go func() {
 		defer srvCF()
@@ -146,6 +176,19 @@ func main() {
 			return
 		}
 	}()
+
+	messageRelayHdl.Start()
+
+	mqttClient.Connect()
+
+	wtchdg.RegisterStopFunc(func() error {
+		mqttClient.Disconnect(1000)
+		return nil
+	})
+	wtchdg.RegisterStopFunc(func() error {
+		messageRelayHdl.Stop()
+		return nil
+	})
 
 	ec = wtchdg.Join()
 }
