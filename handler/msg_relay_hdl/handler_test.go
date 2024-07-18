@@ -24,10 +24,6 @@ func (m *mockMessage) Payload() []byte {
 	return m.payload
 }
 
-func (m *mockMessage) Timestamp() time.Time {
-	return m.timestamp
-}
-
 func TestHandler(t *testing.T) {
 	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	msg := &mockMessage{

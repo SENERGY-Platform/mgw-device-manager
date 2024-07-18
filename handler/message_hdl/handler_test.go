@@ -7,7 +7,6 @@ import (
 	lib_model "github.com/SENERGY-Platform/mgw-device-manager/lib/model"
 	"reflect"
 	"testing"
-	"time"
 )
 
 func TestHandler_HandleMessage(t *testing.T) {
@@ -193,8 +192,4 @@ func (m *mockMessage) Topic() string {
 
 func (m *mockMessage) Payload() []byte {
 	return m.payload
-}
-
-func (m *mockMessage) Timestamp() time.Time {
-	panic("not implemented")
 }
