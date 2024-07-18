@@ -31,6 +31,7 @@ type Config struct {
 	MQTTLog         bool                 `json:"mqtt_log" env_var:"MQTT_LOG"`
 	MQTTDebugLog    bool                 `json:"mqtt_debug_log" env_var:"MQTT_DEBUG_LOG"`
 	ServerPort      uint                 `json:"server_port" env_var:"SERVER_PORT"`
+	MessageBuffer   int                  `json:"message_buffer" env_var:"MESSAGE_BUFFER"`
 }
 
 var defaultMqttClientConfig = MqttClientConfig{
