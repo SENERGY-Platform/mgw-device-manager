@@ -1,0 +1,92 @@
+modfileVersion: "v1"
+id: github.com/SENERGY-Platform/mgw-device-manager/mgw-module
+name: Device Manager
+description: Lists IoT devices connected to the gateway.
+license: Apache-2.0 license
+author: InfAI (CC SES)
+version: v0.1.0
+type: add-on
+deploymentType: single
+dependencies:
+  github.com/SENERGY-Platform/mgw-mqtt-broker:
+    version: "<v2.0.0"
+    requiredServices:
+      broker:
+        - refVar: MQTT_SERVER
+          template: "mqtt://{ref}:1881"
+          services:
+            - manager
+services:
+  manager:
+    name: Device Manager
+    image: ghcr.io/senergy-platform/mgw-device-manager:0.1.0
+volumes:
+  data:
+    - mountPoint: /opt/device-manager/data
+      services:
+        - manager
+inputGroups:
+  log-settings:
+    name: Logging
+  msg-relay:
+    name: Message relay settings
+configs:
+  log-level:
+    value: "warning"
+    options:
+      - "off"
+      - "error"
+      - "warning"
+      - "info"
+      - "debug"
+    targets:
+      - refVar: LOGGER_LEVEL
+        services:
+          - manager
+    userInput:
+      type: text
+      name: Log level
+      group: log-settings
+    optional: true
+  mqtt-log:
+    dataType: int
+    value: 0
+    options:
+      - 0
+      - 1
+    targets:
+      - refVar: MQTT_LOG
+        services:
+          - manager
+    userInput:
+      type: number
+      name: MQTT log
+      group: log-settings
+    optional: true
+  mqtt-debug-log:
+    dataType: int
+    value: 0
+    options:
+      - 0
+      - 1
+    targets:
+      - refVar: MQTT_DEBUG_LOG
+        services:
+          - manager
+    userInput:
+      type: number
+      name: MQTT log
+      group: log-settings
+    optional: true
+  relay-mgs-buffer:
+    dataType: int
+    value: 50000
+    targets:
+      - refVar: MESSAGE_BUFFER
+        services:
+          - manager
+    userInput:
+      type: number
+      name: Message buffer size
+      group: msg-relay
+    optional: true
