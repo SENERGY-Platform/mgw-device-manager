@@ -7,7 +7,7 @@ import (
 
 type DatabaseConfig struct {
 	Timeout    int64  `json:"timeout" env_var:"DB_TIMEOUT"`
-	Path       string `json:"path" env_var:"PATH"`
+	Path       string `json:"path" env_var:"DB_PATH"`
 	SchemaPath string `json:"schema_path" env_var:"DB_SCHEMA_PATH"`
 }
 
