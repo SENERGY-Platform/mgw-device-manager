@@ -41,12 +41,6 @@ type DeviceAttribute struct {
 	Value string `json:"value"`
 }
 
-type DeviceMessage struct {
-	Method   DeviceMethod    `json:"method"`
-	DeviceID string          `json:"device_id"`
-	Data     *DeviceDataBase `json:"data"`
-}
-
 type DevicesFilter struct {
 	IDs   []string
 	State string

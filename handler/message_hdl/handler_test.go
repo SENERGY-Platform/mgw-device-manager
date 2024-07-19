@@ -16,14 +16,32 @@ func TestHandler_HandleMessage(t *testing.T) {
 		}
 		h := Handler{devicesHdl: mockDHdl}
 		a := lib_model.DeviceData{
-			ID:             "123",
-			Ref:            "test",
-			DeviceDataBase: lib_model.DeviceDataBase{Name: "test"},
+			ID:    "123",
+			Ref:   "test",
+			Name:  "test",
+			State: lib_model.Online,
+			Type:  "test2",
+			Attributes: []lib_model.DeviceAttribute{
+				{
+					Key:   "a",
+					Value: "b",
+				},
+			},
 		}
 		p, err := json.Marshal(lib_model.DeviceMessage{
 			Method:   lib_model.Set,
 			DeviceID: "123",
-			Data:     &lib_model.DeviceDataBase{Name: "test"},
+			Data: &lib_model.DeviceMessageData{
+				Name:  "test",
+				State: lib_model.Online,
+				Type:  "test2",
+				Attributes: []lib_model.DeviceAttribute{
+					{
+						Key:   "a",
+						Value: "b",
+					},
+				},
+			},
 		})
 		if err != nil {
 			t.Fatal(err)

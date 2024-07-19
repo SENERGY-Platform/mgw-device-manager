@@ -32,9 +32,12 @@ func (h *Handler) HandleMessage(m handler.Message) error {
 				return errors.New("missing device data")
 			}
 			err := h.devicesHdl.Put(context.Background(), lib_model.DeviceData{
-				ID:             dm.DeviceID,
-				Ref:            ref,
-				DeviceDataBase: *dm.Data,
+				ID:         dm.DeviceID,
+				Ref:        ref,
+				Name:       dm.Data.Name,
+				State:      dm.Data.State,
+				Type:       dm.Data.Type,
+				Attributes: dm.Data.Attributes,
 			})
 			if err != nil {
 				var iie *lib_model.InvalidInputError
