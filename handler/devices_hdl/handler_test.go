@@ -29,7 +29,7 @@ var deviceBase = lib_model.DeviceBase{
 	},
 }
 
-func TestHandler_Set(t *testing.T) {
+func TestHandler_Put(t *testing.T) {
 	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
 	h := New(stgHdl, 0)
