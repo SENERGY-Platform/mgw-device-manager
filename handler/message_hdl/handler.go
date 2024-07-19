@@ -20,6 +20,7 @@ func New(devicesHdl handler.DevicesHandler) *Handler {
 }
 
 func (h *Handler) HandleMessage(m handler.Message) {
+	util.Logger.Debugf("%s handle message (topic=%s payload=%s)", logPrefix, m.Topic(), m.Payload())
 	var ref string
 	switch {
 	case parseTopic(topic.DevicesSub, m.Topic(), &ref):
