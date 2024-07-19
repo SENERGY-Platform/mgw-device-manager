@@ -41,17 +41,15 @@ func TestHandler(t *testing.T) {
 	a := lib_model.Device{
 		DeviceBase: lib_model.DeviceBase{
 			DeviceData: lib_model.DeviceData{
-				ID:  id,
-				Ref: "test",
-				DeviceDataBase: lib_model.DeviceDataBase{
-					Name:  "test",
-					State: "test",
-					Type:  "test",
-					Attributes: []lib_model.DeviceAttribute{
-						{
-							Key:   "test",
-							Value: "test",
-						},
+				ID:    id,
+				Ref:   "test",
+				Name:  "test",
+				State: "test",
+				Type:  "test",
+				Attributes: []lib_model.DeviceAttribute{
+					{
+						Key:   "test",
+						Value: "test",
 					},
 				},
 			},

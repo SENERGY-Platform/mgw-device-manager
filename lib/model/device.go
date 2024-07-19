@@ -18,12 +18,8 @@ type DeviceBase struct {
 }
 
 type DeviceData struct {
-	ID  string `json:"id"`
-	Ref string `json:"ref"`
-	DeviceDataBase
-}
-
-type DeviceDataBase struct {
+	ID         string            `json:"id"`
+	Ref        string            `json:"ref"`
 	Name       string            `json:"name"`
 	State      DeviceState       `json:"state"`
 	Type       string            `json:"type"`

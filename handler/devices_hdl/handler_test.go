@@ -15,17 +15,15 @@ import (
 var id = "1"
 var deviceBase = lib_model.DeviceBase{
 	DeviceData: lib_model.DeviceData{
-		ID:  id,
-		Ref: "test",
-		DeviceDataBase: lib_model.DeviceDataBase{
-			Name:  "test",
-			State: lib_model.Online,
-			Type:  "test",
-			Attributes: []lib_model.DeviceAttribute{
-				{
-					Key:   "a",
-					Value: "b",
-				},
+		ID:    id,
+		Ref:   "test",
+		Name:  "test",
+		State: lib_model.Online,
+		Type:  "test",
+		Attributes: []lib_model.DeviceAttribute{
+			{
+				Key:   "a",
+				Value: "b",
 			},
 		},
 	},
@@ -217,16 +215,14 @@ func TestHandler_Delete(t *testing.T) {
 
 func Test_validateDeviceBase(t *testing.T) {
 	dData := lib_model.DeviceData{
-		ID:  "test",
-		Ref: "test",
-		DeviceDataBase: lib_model.DeviceDataBase{
-			State: lib_model.Online,
-			Type:  "test",
-			Attributes: []lib_model.DeviceAttribute{
-				{
-					Key:   "test",
-					Value: "test",
-				},
+		ID:    "test",
+		Ref:   "test",
+		State: lib_model.Online,
+		Type:  "test",
+		Attributes: []lib_model.DeviceAttribute{
+			{
+				Key:   "test",
+				Value: "test",
 			},
 		},
 	}
