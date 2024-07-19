@@ -4,7 +4,7 @@ name: Device Manager
 description: Lists IoT devices connected to the gateway.
 license: Apache-2.0 license
 author: InfAI (CC SES)
-version: v0.3.4
+version: v0.3.5
 type: add-on
 deploymentType: single
 dependencies:
@@ -83,7 +83,7 @@ configs:
       name: MQTT debug log
       group: log-settings
     optional: true
-  relay-mgs-buffer:
+  relay-msg-buffer:
     dataType: int
     value: 50000
     targets:
