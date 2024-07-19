@@ -20,6 +20,11 @@ services:
   manager:
     name: Device Manager
     image: ghcr.io/senergy-platform/mgw-device-manager:0.1.4
+    ports:
+      - port: 80
+    httpEndpoints:
+      - name: API
+        extPath: "api"
 volumes:
   data:
     - mountPoint: /opt/device-manager/data
