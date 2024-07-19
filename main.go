@@ -110,7 +110,7 @@ func main() {
 
 	mqttHdl.SetMqttClient(mqttClient)
 
-	mApi := api.New(deviceHdl)
+	mApi := api.New(deviceHdl, srvInfoHdl)
 
 	gin.SetMode(gin.ReleaseMode)
 	httpHandler := gin.New()

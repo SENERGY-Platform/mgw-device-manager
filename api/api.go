@@ -10,6 +10,9 @@ type Api struct {
 	srvInfoHdl srv_info_hdl.SrvInfoHandler
 }
 
-func New(devicesHdl handler.DevicesHandler) *Api {
-	return &Api{devicesHdl: devicesHdl}
+func New(devicesHdl handler.DevicesHandler, srvInfoHdl srv_info_hdl.SrvInfoHandler) *Api {
+	return &Api{
+		devicesHdl: devicesHdl,
+		srvInfoHdl: srvInfoHdl,
+	}
 }

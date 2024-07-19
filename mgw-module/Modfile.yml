@@ -4,7 +4,7 @@ name: Device Manager
 description: Lists IoT devices connected to the gateway.
 license: Apache-2.0 license
 author: InfAI (CC SES)
-version: v0.3.3
+version: v0.3.4
 type: add-on
 deploymentType: single
 dependencies:
@@ -19,7 +19,7 @@ dependencies:
 services:
   manager:
     name: Device Manager
-    image: ghcr.io/senergy-platform/mgw-device-manager:0.2.2
+    image: ghcr.io/senergy-platform/mgw-device-manager:0.2.3
     ports:
       - port: 80
     httpEndpoints:
