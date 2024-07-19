@@ -4,7 +4,7 @@ name: Device Manager
 description: Lists IoT devices connected to the gateway.
 license: Apache-2.0 license
 author: InfAI (CC SES)
-version: v0.1.4
+version: v0.2.0
 type: add-on
 deploymentType: single
 dependencies:
