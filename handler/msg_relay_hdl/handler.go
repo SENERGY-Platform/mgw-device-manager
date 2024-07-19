@@ -3,10 +3,7 @@ package msg_relay_hdl
 import (
 	"errors"
 	"github.com/SENERGY-Platform/mgw-device-manager/handler"
-	"github.com/SENERGY-Platform/mgw-device-manager/util"
 )
-
-const logPrefix = "[relay-hdl]"
 
 type Handler struct {
 	messages   chan handler.Message
@@ -42,10 +39,7 @@ func (h *Handler) Stop() {
 
 func (h *Handler) run() {
 	for message := range h.messages {
-		err := h.handleFunc(message)
-		if err != nil {
-			util.Logger.Errorf("%s handle message: %s", logPrefix, err)
-		}
+		h.handleFunc(message)
 	}
 	h.dChan <- struct{}{}
 }

@@ -41,4 +41,4 @@ type MessageRelayHandler interface {
 	Put(m Message) error
 }
 
-type MessageHandler func(m Message) error
+type MessageHandler func(m Message)

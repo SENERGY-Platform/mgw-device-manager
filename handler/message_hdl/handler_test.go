@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	sb_util "github.com/SENERGY-Platform/go-service-base/util"
 	lib_model "github.com/SENERGY-Platform/mgw-device-manager/lib/model"
+	"github.com/SENERGY-Platform/mgw-device-manager/util"
 	"reflect"
 	"testing"
 )
 
 func TestHandler_HandleMessage(t *testing.T) {
+	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	t.Run("set device", func(t *testing.T) {
 		mockDHdl := &mockDeviceHdl{
 			Devices: make(map[string]lib_model.DeviceData),
@@ -46,13 +49,10 @@ func TestHandler_HandleMessage(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = h.HandleMessage(&mockMessage{
+		h.HandleMessage(&mockMessage{
 			topic:   "device-manager/device/test",
 			payload: p,
 		})
-		if err != nil {
-			t.Error(err)
-		}
 		b, ok := mockDHdl.Devices["123"]
 		if !ok {
 			t.Error("not in map")
@@ -70,24 +70,21 @@ func TestHandler_HandleMessage(t *testing.T) {
 				Method:   lib_model.Set,
 				DeviceID: "123",
 			})
-			err = h.HandleMessage(&mockMessage{
+			if err != nil {
+				t.Fatal(err)
+			}
+			h.HandleMessage(&mockMessage{
 				topic:   "device-manager/device/test",
 				payload: p2,
 			})
-			if err == nil {
-				t.Error("expected error")
-			}
 		})
 		t.Run("error", func(t *testing.T) {
-			mockDHdl := &mockDeviceHdl{PutErr: lib_model.NewInvalidInputError(errors.New("test"))}
+			mockDHdl := &mockDeviceHdl{PutErr: errors.New("test")}
 			h := Handler{devicesHdl: mockDHdl}
-			err = h.HandleMessage(&mockMessage{
+			h.HandleMessage(&mockMessage{
 				topic:   "device-manager/device/test",
 				payload: p,
 			})
-			if err == nil {
-				t.Error("expected error")
-			}
 		})
 	})
 	t.Run("delete device", func(t *testing.T) {
@@ -100,20 +97,28 @@ func TestHandler_HandleMessage(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_ = h.HandleMessage(&mockMessage{
+		h.HandleMessage(&mockMessage{
 			topic:   "device-manager/device/test",
 			payload: p,
 		})
 		if mockDHdl.DeleteC != 1 {
 			t.Error("missing call")
 		}
+		t.Run("error", func(t *testing.T) {
+			mockDHdl := &mockDeviceHdl{DeleteErr: errors.New("test")}
+			h := Handler{devicesHdl: mockDHdl}
+			h.HandleMessage(&mockMessage{
+				topic:   "device-manager/device/test",
+				payload: p,
+			})
+		})
 	})
 	t.Run("set states", func(t *testing.T) {
 		mockDHdl := &mockDeviceHdl{
 			States: make(map[string]lib_model.DeviceState),
 		}
 		h := Handler{devicesHdl: mockDHdl}
-		_ = h.HandleMessage(&mockMessage{
+		h.HandleMessage(&mockMessage{
 			topic: "device-manager/device/test/lw",
 		})
 		s, ok := mockDHdl.States["test"]
@@ -123,6 +128,13 @@ func TestHandler_HandleMessage(t *testing.T) {
 		if s != lib_model.Offline {
 			t.Error("got", s, "expected", lib_model.Offline)
 		}
+		t.Run("error", func(t *testing.T) {
+			mockDHdl := &mockDeviceHdl{SetStatesErr: errors.New("test")}
+			h := Handler{devicesHdl: mockDHdl}
+			h.HandleMessage(&mockMessage{
+				topic: "device-manager/device/test/lw",
+			})
+		})
 	})
 	t.Run("unknown method", func(t *testing.T) {
 		mockDHdl := &mockDeviceHdl{}
@@ -133,23 +145,17 @@ func TestHandler_HandleMessage(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = h.HandleMessage(&mockMessage{
+		h.HandleMessage(&mockMessage{
 			topic:   "device-manager/device/test",
 			payload: p,
 		})
-		if err == nil {
-			t.Error("expected error")
-		}
 	})
 	t.Run("parse topic error", func(t *testing.T) {
 		mockDHdl := &mockDeviceHdl{}
 		h := Handler{devicesHdl: mockDHdl}
-		err := h.HandleMessage(&mockMessage{
+		h.HandleMessage(&mockMessage{
 			topic: "test",
 		})
-		if err == nil {
-			t.Error("expected error")
-		}
 	})
 }
 
@@ -196,6 +202,9 @@ func (m *mockDeviceHdl) SetStates(ctx context.Context, ref string, state lib_mod
 
 func (m *mockDeviceHdl) Delete(ctx context.Context, id string) error {
 	m.DeleteC++
+	if m.DeleteErr != nil {
+		return m.DeleteErr
+	}
 	return nil
 }
 
