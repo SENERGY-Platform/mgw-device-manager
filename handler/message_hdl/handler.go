@@ -30,7 +30,6 @@ func (h *Handler) HandleMessage(m handler.Message) {
 		}
 		switch dm.Method {
 		case lib_model.Set:
-			util.Logger.Infof("%s set device (%s)", logPrefix, dm.DeviceID)
 			if dm.Data == nil {
 				util.Logger.Errorf("%s set device (%s): missing data", logPrefix, dm.DeviceID)
 				return
@@ -45,20 +44,24 @@ func (h *Handler) HandleMessage(m handler.Message) {
 			})
 			if err != nil {
 				util.Logger.Errorf("%s set device (%s): %s", logPrefix, dm.DeviceID, err)
+				return
 			}
+			util.Logger.Infof("%s set device (%s)", logPrefix, dm.DeviceID)
 		case lib_model.Delete:
-			util.Logger.Infof("%s delete device (%s)", logPrefix, dm.DeviceID)
 			if err := h.devicesHdl.Delete(context.Background(), dm.DeviceID); err != nil {
 				util.Logger.Errorf("%s delete device (%s): %s", logPrefix, dm.DeviceID, err)
+				return
 			}
+			util.Logger.Infof("%s delete device (%s)", logPrefix, dm.DeviceID)
 		default:
 			util.Logger.Errorf("%s unknown method '%s'", logPrefix, dm.Method)
 		}
 	case parseTopic(topic.LastWillSub, m.Topic(), &ref):
-		util.Logger.Infof("%s set device states (%s)", logPrefix, ref)
 		if err := h.devicesHdl.SetStates(context.Background(), ref, lib_model.Offline); err != nil {
 			util.Logger.Errorf("%s set device states (%s): %s", logPrefix, ref, err)
+			return
 		}
+		util.Logger.Infof("%s set device states (%s)", logPrefix, ref)
 	default:
 		util.Logger.Errorf("%s unknown topic '%s'", logPrefix, m.Topic())
 	}
