@@ -124,6 +124,9 @@ func (h *Handler) Read(ctx context.Context, id string) (lib_model.Device, error)
 	var created, updated, usrUpdated string
 	err := row.Scan(&device.ID, &device.Ref, &device.Name, &device.State, &device.Type, &created, &updated, &device.UserData.Name, &usrUpdated)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return lib_model.Device{}, lib_model.NewNotFoundError(err)
+		}
 		return lib_model.Device{}, lib_model.NewInternalError(err)
 	}
 	attrRows, err := h.db.QueryContext(ctx, "SELECT is_usr, key_name, value FROM device_attributes WHERE dev_id = ?;", id)
