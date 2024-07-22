@@ -39,10 +39,9 @@ func (h *Handler) HandleMessage(m handler.Message) {
 				ID:         dm.DeviceID,
 				Ref:        ref,
 				Name:       dm.Data.Name,
-				State:      dm.Data.State,
 				Type:       dm.Data.Type,
 				Attributes: dm.Data.Attributes,
-			})
+			}, dm.Data.State)
 			if err != nil {
 				util.Logger.Errorf("%s set device (%s): %s", logPrefix, dm.DeviceID, err)
 				return

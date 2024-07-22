@@ -4,13 +4,12 @@ import (
 	"context"
 	"database/sql/driver"
 	lib_model "github.com/SENERGY-Platform/mgw-device-manager/lib/model"
-	"time"
 )
 
 type DevicesHandler interface {
-	Put(ctx context.Context, deviceData lib_model.DeviceDataBase) error
-	Get(ctx context.Context, id string) (lib_model.DeviceBase, error)
-	GetAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.DeviceBase, error)
+	Put(ctx context.Context, deviceDataBase lib_model.DeviceDataBase, state lib_model.DeviceState) error
+	Get(ctx context.Context, id string) (lib_model.Device, error)
+	GetAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.Device, error)
 	SetUserData(ctx context.Context, id string, userDataBase lib_model.DeviceUserDataBase) error
 	SetStates(ctx context.Context, ref string, state lib_model.DeviceState) error
 	Delete(ctx context.Context, id string) error

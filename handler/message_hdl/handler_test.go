@@ -15,15 +15,15 @@ func TestHandler_HandleMessage(t *testing.T) {
 	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	t.Run("set device", func(t *testing.T) {
 		mockDHdl := &mockDeviceHdl{
-			Devices: make(map[string]lib_model.DeviceDataBase),
+			Devices:    make(map[string]lib_model.DeviceDataBase),
+			StatesByID: make(map[string]lib_model.DeviceState),
 		}
 		h := Handler{devicesHdl: mockDHdl}
 		a := lib_model.DeviceDataBase{
-			ID:    "123",
-			Ref:   "test",
-			Name:  "test",
-			State: lib_model.Online,
-			Type:  "test2",
+			ID:   "123",
+			Ref:  "test",
+			Name: "test",
+			Type: "test2",
 			Attributes: []lib_model.DeviceAttribute{
 				{
 					Key:   "a",
@@ -59,6 +59,9 @@ func TestHandler_HandleMessage(t *testing.T) {
 		}
 		if !reflect.DeepEqual(a, b) {
 			t.Error("got", b, "expected", a)
+		}
+		if mockDHdl.StatesByID["123"] != lib_model.Online {
+			t.Error("got", mockDHdl.StatesByID["123"], "expected", a)
 		}
 		if mockDHdl.PutC != 1 {
 			t.Error("missing call")
@@ -115,13 +118,13 @@ func TestHandler_HandleMessage(t *testing.T) {
 	})
 	t.Run("set states", func(t *testing.T) {
 		mockDHdl := &mockDeviceHdl{
-			States: make(map[string]lib_model.DeviceState),
+			StatesRef: make(map[string]lib_model.DeviceState),
 		}
 		h := Handler{devicesHdl: mockDHdl}
 		h.HandleMessage(&mockMessage{
 			topic: "device-manager/device/test/lw",
 		})
-		s, ok := mockDHdl.States["test"]
+		s, ok := mockDHdl.StatesRef["test"]
 		if !ok {
 			t.Error("not in map")
 		}
@@ -161,7 +164,8 @@ func TestHandler_HandleMessage(t *testing.T) {
 
 type mockDeviceHdl struct {
 	Devices      map[string]lib_model.DeviceDataBase
-	States       map[string]lib_model.DeviceState
+	StatesRef    map[string]lib_model.DeviceState
+	StatesByID   map[string]lib_model.DeviceState
 	PutErr       error
 	SetStatesErr error
 	DeleteErr    error
@@ -170,20 +174,21 @@ type mockDeviceHdl struct {
 	DeleteC      int
 }
 
-func (m *mockDeviceHdl) Put(ctx context.Context, deviceData lib_model.DeviceDataBase) error {
+func (m *mockDeviceHdl) Put(ctx context.Context, deviceData lib_model.DeviceDataBase, state lib_model.DeviceState) error {
 	m.PutC++
 	if m.PutErr != nil {
 		return m.PutErr
 	}
 	m.Devices[deviceData.ID] = deviceData
+	m.StatesByID[deviceData.ID] = state
 	return nil
 }
 
-func (m *mockDeviceHdl) Get(ctx context.Context, id string) (lib_model.DeviceBase, error) {
+func (m *mockDeviceHdl) Get(ctx context.Context, id string) (lib_model.Device, error) {
 	panic("not implemented")
 }
 
-func (m *mockDeviceHdl) GetAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.DeviceBase, error) {
+func (m *mockDeviceHdl) GetAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.Device, error) {
 	panic("not implemented")
 }
 
@@ -196,7 +201,7 @@ func (m *mockDeviceHdl) SetStates(ctx context.Context, ref string, state lib_mod
 	if m.SetStatesErr != nil {
 		return m.SetStatesErr
 	}
-	m.States[ref] = state
+	m.StatesRef[ref] = state
 	return nil
 }
 
