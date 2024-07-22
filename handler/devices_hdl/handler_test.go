@@ -13,8 +13,8 @@ import (
 )
 
 var id = "1"
-var deviceBase = lib_model.DeviceBase{
-	DeviceData: lib_model.DeviceData{
+var deviceBase = lib_model.DeviceData{
+	DeviceDataBase: lib_model.DeviceDataBase{
 		ID:    id,
 		Ref:   "test",
 		Name:  "test",
@@ -31,10 +31,10 @@ var deviceBase = lib_model.DeviceBase{
 
 func TestHandler_Put(t *testing.T) {
 	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
-	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
+	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.DeviceBase)}
 	h := New(stgHdl, 0)
 	t.Run("does not exist", func(t *testing.T) {
-		err := h.Put(context.Background(), deviceBase.DeviceData)
+		err := h.Put(context.Background(), deviceBase.DeviceDataBase)
 		if err != nil {
 			t.Error(err)
 		}
@@ -42,8 +42,8 @@ func TestHandler_Put(t *testing.T) {
 		if !ok {
 			t.Error("not created")
 		}
-		if !reflect.DeepEqual(deviceBase.DeviceData, device.DeviceData) {
-			t.Error("expected\n", deviceBase.DeviceData, "got\n", device.DeviceData)
+		if !reflect.DeepEqual(deviceBase.DeviceDataBase, device.DeviceDataBase) {
+			t.Error("expected\n", deviceBase.DeviceDataBase, "got\n", device.DeviceDataBase)
 		}
 		if device.Created.IsZero() {
 			t.Error("created timestamp is zero")
@@ -52,19 +52,19 @@ func TestHandler_Put(t *testing.T) {
 	t.Run("exist", func(t *testing.T) {
 		deviceBase2 := deviceBase
 		deviceBase2.Name = "test2"
-		if err := h.Put(context.Background(), deviceBase2.DeviceData); err != nil {
+		if err := h.Put(context.Background(), deviceBase2.DeviceDataBase); err != nil {
 			t.Error(err)
 		}
 		device := stgHdl.devices[id]
-		if !reflect.DeepEqual(deviceBase2.DeviceData, device.DeviceData) {
-			t.Error("expected\n", deviceBase2.DeviceData, "got\n", device.DeviceData)
+		if !reflect.DeepEqual(deviceBase2.DeviceDataBase, device.DeviceDataBase) {
+			t.Error("expected\n", deviceBase2.DeviceDataBase, "got\n", device.DeviceDataBase)
 		}
 		if device.Updated.IsZero() {
 			t.Error("updated timestamp is zero")
 		}
 	})
 	t.Run("invalid input", func(t *testing.T) {
-		err := h.Put(context.Background(), lib_model.DeviceData{})
+		err := h.Put(context.Background(), lib_model.DeviceDataBase{})
 		if err == nil {
 			t.Error("expected error")
 		}
@@ -73,7 +73,7 @@ func TestHandler_Put(t *testing.T) {
 
 func TestHandler_Get(t *testing.T) {
 	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
-	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
+	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.DeviceBase)}
 	h := New(stgHdl, 0)
 	t.Run("does not exist", func(t *testing.T) {
 		_, err := h.Get(context.Background(), "test")
@@ -82,20 +82,20 @@ func TestHandler_Get(t *testing.T) {
 		}
 	})
 	t.Run("exists", func(t *testing.T) {
-		stgHdl.devices[id] = lib_model.Device{DeviceBase: deviceBase}
+		stgHdl.devices[id] = lib_model.DeviceBase{DeviceData: deviceBase}
 		device, err := h.Get(context.Background(), id)
 		if err != nil {
 			t.Error(err)
 		}
-		if !reflect.DeepEqual(device.DeviceBase, deviceBase) {
-			t.Error("expected\n", deviceBase, "got\n", device.DeviceBase)
+		if !reflect.DeepEqual(device.DeviceData, deviceBase) {
+			t.Error("expected\n", deviceBase, "got\n", device.DeviceData)
 		}
 	})
 }
 
 func TestHandler_GetAll(t *testing.T) {
 	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
-	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
+	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.DeviceBase)}
 	h := New(stgHdl, 0)
 	t.Run("no entries", func(t *testing.T) {
 		devices, err := h.GetAll(context.Background(), lib_model.DevicesFilter{})
@@ -107,7 +107,7 @@ func TestHandler_GetAll(t *testing.T) {
 		}
 	})
 	t.Run("with entries", func(t *testing.T) {
-		stgHdl.devices[id] = lib_model.Device{DeviceBase: deviceBase}
+		stgHdl.devices[id] = lib_model.DeviceBase{DeviceData: deviceBase}
 		devices, err := h.GetAll(context.Background(), lib_model.DevicesFilter{})
 		if err != nil {
 			t.Error(err)
@@ -127,7 +127,7 @@ func TestHandler_GetAll(t *testing.T) {
 
 func TestHandler_UpdateUserData(t *testing.T) {
 	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
-	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
+	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.DeviceBase)}
 	h := New(stgHdl, 0)
 	userDataBase := lib_model.DeviceUserDataBase{
 		Name: "test",
@@ -147,7 +147,7 @@ func TestHandler_UpdateUserData(t *testing.T) {
 		}
 	})
 	t.Run("exists", func(t *testing.T) {
-		stgHdl.devices[id] = lib_model.Device{DeviceBase: deviceBase}
+		stgHdl.devices[id] = lib_model.DeviceBase{DeviceData: deviceBase}
 		if err := h.SetUserData(context.Background(), id, userDataBase); err != nil {
 			t.Error(err)
 		}
@@ -170,8 +170,8 @@ func TestHandler_UpdateUserData(t *testing.T) {
 func TestHandler_SetStates(t *testing.T) {
 	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
 	stgHdl := &stgHdlMock{
-		devices: map[string]lib_model.Device{
-			id: {DeviceBase: deviceBase},
+		devices: map[string]lib_model.DeviceBase{
+			id: {DeviceData: deviceBase},
 		},
 	}
 	h := New(stgHdl, 0)
@@ -195,7 +195,7 @@ func TestHandler_SetStates(t *testing.T) {
 
 func TestHandler_Delete(t *testing.T) {
 	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
-	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.Device)}
+	stgHdl := &stgHdlMock{devices: make(map[string]lib_model.DeviceBase)}
 	h := New(stgHdl, 0)
 	t.Run("does not exist", func(t *testing.T) {
 		if err := h.Delete(context.Background(), id); err == nil {
@@ -203,7 +203,7 @@ func TestHandler_Delete(t *testing.T) {
 		}
 	})
 	t.Run("exists", func(t *testing.T) {
-		stgHdl.devices[id] = lib_model.Device{DeviceBase: deviceBase}
+		stgHdl.devices[id] = lib_model.DeviceBase{DeviceData: deviceBase}
 		if err := h.Delete(context.Background(), id); err != nil {
 			t.Error(err)
 		}
@@ -214,7 +214,7 @@ func TestHandler_Delete(t *testing.T) {
 }
 
 func Test_validateDeviceBase(t *testing.T) {
-	dData := lib_model.DeviceData{
+	dData := lib_model.DeviceDataBase{
 		ID:    "test",
 		Ref:   "test",
 		State: lib_model.Online,
@@ -315,7 +315,7 @@ func Test_isValidDeviceState(t *testing.T) {
 }
 
 type stgHdlMock struct {
-	devices   map[string]lib_model.Device
+	devices   map[string]lib_model.DeviceBase
 	getAllErr error
 }
 
@@ -323,18 +323,18 @@ func (m *stgHdlMock) BeginTransaction(_ context.Context) (driver.Tx, error) {
 	panic("not implemented")
 }
 
-func (m *stgHdlMock) Create(_ context.Context, tx driver.Tx, dBase lib_model.DeviceBase) error {
+func (m *stgHdlMock) Create(_ context.Context, tx driver.Tx, dBase lib_model.DeviceData) error {
 	if tx != nil {
 		panic("not implemented")
 	}
 	if _, ok := m.devices[dBase.ID]; ok {
 		return errors.New("duplicate device")
 	}
-	m.devices[dBase.ID] = lib_model.Device{DeviceBase: dBase}
+	m.devices[dBase.ID] = lib_model.DeviceBase{DeviceData: dBase}
 	return nil
 }
 
-func (m *stgHdlMock) Read(_ context.Context, id string) (lib_model.Device, error) {
+func (m *stgHdlMock) Read(_ context.Context, id string) (lib_model.DeviceBase, error) {
 	device, ok := m.devices[id]
 	if !ok {
 		return device, lib_model.NewNotFoundError(errors.New("not found"))
@@ -342,14 +342,14 @@ func (m *stgHdlMock) Read(_ context.Context, id string) (lib_model.Device, error
 	return device, nil
 }
 
-func (m *stgHdlMock) ReadAll(_ context.Context, _ lib_model.DevicesFilter) (map[string]lib_model.Device, error) {
+func (m *stgHdlMock) ReadAll(_ context.Context, _ lib_model.DevicesFilter) (map[string]lib_model.DeviceBase, error) {
 	if m.getAllErr != nil {
 		return nil, m.getAllErr
 	}
 	return m.devices, nil
 }
 
-func (m *stgHdlMock) Update(_ context.Context, tx driver.Tx, dBase lib_model.DeviceBase) error {
+func (m *stgHdlMock) Update(_ context.Context, tx driver.Tx, dBase lib_model.DeviceData) error {
 	if tx != nil {
 		panic("not implemented")
 	}
@@ -357,7 +357,7 @@ func (m *stgHdlMock) Update(_ context.Context, tx driver.Tx, dBase lib_model.Dev
 	if !ok {
 		return lib_model.NewNotFoundError(errors.New("not found"))
 	}
-	device.DeviceBase = dBase
+	device.DeviceData = dBase
 	m.devices[dBase.ID] = device
 	return nil
 }

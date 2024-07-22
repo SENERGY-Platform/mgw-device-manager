@@ -6,18 +6,18 @@ type DeviceState = string
 
 type DeviceMethod = string
 
-type Device struct {
-	DeviceBase
+type DeviceBase struct {
+	DeviceData
 	UserData DeviceUserData `json:"user_data,omitempty"`
 }
 
-type DeviceBase struct {
-	DeviceData
+type DeviceData struct {
+	DeviceDataBase
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }
 
-type DeviceData struct {
+type DeviceDataBase struct {
 	ID         string            `json:"id"`
 	Ref        string            `json:"ref"`
 	Name       string            `json:"name"`

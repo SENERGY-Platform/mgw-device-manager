@@ -13,6 +13,7 @@ import (
 type Handler struct {
 	stgHdl  handler.DevicesStorageHandler
 	timeout time.Duration
+	states  map[string]lib_model.DeviceState
 	mu      sync.RWMutex
 }
 
@@ -23,7 +24,7 @@ func New(stgHdl handler.DevicesStorageHandler, timeout time.Duration) *Handler {
 	}
 }
 
-func (h *Handler) Put(ctx context.Context, deviceData lib_model.DeviceData) error {
+func (h *Handler) Put(ctx context.Context, deviceData lib_model.DeviceDataBase) error {
 	err := validateDeviceData(deviceData)
 	if err != nil {
 		return lib_model.NewInvalidInputError(err)
@@ -40,38 +41,38 @@ func (h *Handler) Put(ctx context.Context, deviceData lib_model.DeviceData) erro
 		}
 		ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
 		defer cf2()
-		err = h.stgHdl.Create(ctxWt2, nil, lib_model.DeviceBase{
-			DeviceData: deviceData,
-			Created:    time.Now().UTC(),
+		err = h.stgHdl.Create(ctxWt2, nil, lib_model.DeviceData{
+			DeviceDataBase: deviceData,
+			Created:        time.Now().UTC(),
 		})
 		if err != nil {
 			return fmt.Errorf("put device: %s", err)
 		}
 		return nil
 	}
-	device.DeviceData = deviceData
+	device.DeviceDataBase = deviceData
 	device.Updated = time.Now().UTC()
 	ctxWt2, cf2 := context.WithTimeout(ctx, h.timeout)
 	defer cf2()
-	if err = h.stgHdl.Update(ctxWt2, nil, device.DeviceBase); err != nil {
+	if err = h.stgHdl.Update(ctxWt2, nil, device.DeviceData); err != nil {
 		return fmt.Errorf("put device: %s", err)
 	}
 	return nil
 }
 
-func (h *Handler) Get(ctx context.Context, id string) (lib_model.Device, error) {
+func (h *Handler) Get(ctx context.Context, id string) (lib_model.DeviceBase, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
 	defer cf()
 	device, err := h.stgHdl.Read(ctxWt, id)
 	if err != nil {
-		return lib_model.Device{}, fmt.Errorf("get device: %s", err)
+		return lib_model.DeviceBase{}, fmt.Errorf("get device: %s", err)
 	}
 	return device, nil
 }
 
-func (h *Handler) GetAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.Device, error) {
+func (h *Handler) GetAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.DeviceBase, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	ctxWt, cf := context.WithTimeout(ctx, h.timeout)
@@ -132,7 +133,7 @@ func (h *Handler) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func validateDeviceData(dBase lib_model.DeviceData) error {
+func validateDeviceData(dBase lib_model.DeviceDataBase) error {
 	if dBase.ID == "" {
 		return errors.New("empty id")
 	}

@@ -35,7 +35,7 @@ func (h *Handler) HandleMessage(m handler.Message) {
 				util.Logger.Errorf("%s set device (%s): missing data", logPrefix, dm.DeviceID)
 				return
 			}
-			err := h.devicesHdl.Put(context.Background(), lib_model.DeviceData{
+			err := h.devicesHdl.Put(context.Background(), lib_model.DeviceDataBase{
 				ID:         dm.DeviceID,
 				Ref:        ref,
 				Name:       dm.Data.Name,

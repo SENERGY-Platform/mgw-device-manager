@@ -38,9 +38,9 @@ func TestHandler(t *testing.T) {
 		}
 	})
 	id := "1"
-	a := lib_model.Device{
-		DeviceBase: lib_model.DeviceBase{
-			DeviceData: lib_model.DeviceData{
+	a := lib_model.DeviceBase{
+		DeviceData: lib_model.DeviceData{
+			DeviceDataBase: lib_model.DeviceDataBase{
 				ID:    id,
 				Ref:   "test",
 				Name:  "test",
@@ -70,13 +70,13 @@ func TestHandler(t *testing.T) {
 		},
 	}
 	t.Run("create device", func(t *testing.T) {
-		err = h.Create(context.Background(), nil, a.DeviceBase)
+		err = h.Create(context.Background(), nil, a.DeviceData)
 		if err != nil {
 			t.Error(err)
 		}
 	})
 	t.Run("create device exists", func(t *testing.T) {
-		err = h.Create(context.Background(), nil, a.DeviceBase)
+		err = h.Create(context.Background(), nil, a.DeviceData)
 		if err == nil {
 			t.Error("expected error")
 		}
@@ -86,8 +86,8 @@ func TestHandler(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if !reflect.DeepEqual(a.DeviceBase, b.DeviceBase) {
-			t.Error("expected\n", a.DeviceBase, "got\n", b.DeviceBase)
+		if !reflect.DeepEqual(a.DeviceData, b.DeviceData) {
+			t.Error("expected\n", a.DeviceData, "got\n", b.DeviceData)
 		}
 	})
 	t.Run("read device does not exist", func(t *testing.T) {
@@ -107,7 +107,7 @@ func TestHandler(t *testing.T) {
 			Key:   "test2",
 			Value: "test2",
 		})
-		err = h.Update(context.Background(), nil, a.DeviceBase)
+		err = h.Update(context.Background(), nil, a.DeviceData)
 		if err != nil {
 			t.Error(err)
 		}
@@ -115,12 +115,12 @@ func TestHandler(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if !reflect.DeepEqual(a.DeviceBase, b.DeviceBase) {
-			t.Error("expected\n", a.DeviceBase, "got\n", b.DeviceBase)
+		if !reflect.DeepEqual(a.DeviceData, b.DeviceData) {
+			t.Error("expected\n", a.DeviceData, "got\n", b.DeviceData)
 		}
 	})
 	t.Run("update device does not exist", func(t *testing.T) {
-		err = h.Update(context.Background(), nil, lib_model.DeviceBase{DeviceData: lib_model.DeviceData{ID: "2"}})
+		err = h.Update(context.Background(), nil, lib_model.DeviceData{DeviceDataBase: lib_model.DeviceDataBase{ID: "2"}})
 		if err == nil {
 			t.Error("expected error")
 		}

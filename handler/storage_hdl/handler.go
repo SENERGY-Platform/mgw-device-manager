@@ -28,7 +28,7 @@ func (h *Handler) BeginTransaction(ctx context.Context) (driver.Tx, error) {
 	return tx, nil
 }
 
-func (h *Handler) ReadAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.Device, error) {
+func (h *Handler) ReadAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.DeviceBase, error) {
 	fc, val := genFilter(filter)
 	q := "SELECT id, ref, name, state, type, created, updated, usr_name, usr_updated FROM devices"
 	if fc != "" {
@@ -44,9 +44,9 @@ func (h *Handler) ReadAll(ctx context.Context, filter lib_model.DevicesFilter) (
 		return nil, lib_model.NewInternalError(err)
 	}
 	defer attrRows.Close()
-	devices := make(map[string]lib_model.Device)
+	devices := make(map[string]lib_model.DeviceBase)
 	for devRows.Next() {
-		var device lib_model.Device
+		var device lib_model.DeviceBase
 		var created, updated, usrUpdated string
 		if err = devRows.Scan(&device.ID, &device.Ref, &device.Name, &device.State, &device.Type, &created, &updated, &device.UserData.Name, &usrUpdated); err != nil {
 			return nil, lib_model.NewInternalError(err)
@@ -90,7 +90,7 @@ func (h *Handler) ReadAll(ctx context.Context, filter lib_model.DevicesFilter) (
 	return devices, nil
 }
 
-func (h *Handler) Create(ctx context.Context, txItf driver.Tx, device lib_model.DeviceBase) error {
+func (h *Handler) Create(ctx context.Context, txItf driver.Tx, device lib_model.DeviceData) error {
 	var tx *sql.Tx
 	if txItf != nil {
 		tx = txItf.(*sql.Tx)
@@ -118,39 +118,39 @@ func (h *Handler) Create(ctx context.Context, txItf driver.Tx, device lib_model.
 	return nil
 }
 
-func (h *Handler) Read(ctx context.Context, id string) (lib_model.Device, error) {
+func (h *Handler) Read(ctx context.Context, id string) (lib_model.DeviceBase, error) {
 	row := h.db.QueryRowContext(ctx, "SELECT id, ref, name, state, type, created, updated, usr_name, usr_updated FROM devices WHERE id = ?;", id)
-	var device lib_model.Device
+	var device lib_model.DeviceBase
 	var created, updated, usrUpdated string
 	err := row.Scan(&device.ID, &device.Ref, &device.Name, &device.State, &device.Type, &created, &updated, &device.UserData.Name, &usrUpdated)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return lib_model.Device{}, lib_model.NewNotFoundError(err)
+			return lib_model.DeviceBase{}, lib_model.NewNotFoundError(err)
 		}
-		return lib_model.Device{}, lib_model.NewInternalError(err)
+		return lib_model.DeviceBase{}, lib_model.NewInternalError(err)
 	}
 	attrRows, err := h.db.QueryContext(ctx, "SELECT is_usr, key_name, value FROM device_attributes WHERE dev_id = ?;", id)
 	if err != nil {
-		return lib_model.Device{}, lib_model.NewInternalError(err)
+		return lib_model.DeviceBase{}, lib_model.NewInternalError(err)
 	}
 	defer attrRows.Close()
 	device.Created, err = stringToTime(created)
 	if err != nil {
-		return lib_model.Device{}, lib_model.NewInternalError(err)
+		return lib_model.DeviceBase{}, lib_model.NewInternalError(err)
 	}
 	device.Updated, err = stringToTime(updated)
 	if err != nil {
-		return lib_model.Device{}, lib_model.NewInternalError(err)
+		return lib_model.DeviceBase{}, lib_model.NewInternalError(err)
 	}
 	device.UserData.Updated, err = stringToTime(usrUpdated)
 	if err != nil {
-		return lib_model.Device{}, lib_model.NewInternalError(err)
+		return lib_model.DeviceBase{}, lib_model.NewInternalError(err)
 	}
 	for attrRows.Next() {
 		var isUsr bool
 		var devAttr lib_model.DeviceAttribute
 		if err = attrRows.Scan(&isUsr, &devAttr.Key, &devAttr.Value); err != nil {
-			return lib_model.Device{}, lib_model.NewInternalError(err)
+			return lib_model.DeviceBase{}, lib_model.NewInternalError(err)
 		}
 		if isUsr {
 			device.UserData.Attributes = append(device.UserData.Attributes, devAttr)
@@ -159,12 +159,12 @@ func (h *Handler) Read(ctx context.Context, id string) (lib_model.Device, error)
 		}
 	}
 	if err = attrRows.Err(); err != nil {
-		return lib_model.Device{}, lib_model.NewInternalError(err)
+		return lib_model.DeviceBase{}, lib_model.NewInternalError(err)
 	}
 	return device, nil
 }
 
-func (h *Handler) Update(ctx context.Context, txItf driver.Tx, deviceBase lib_model.DeviceBase) error {
+func (h *Handler) Update(ctx context.Context, txItf driver.Tx, deviceBase lib_model.DeviceData) error {
 	var tx *sql.Tx
 	if txItf != nil {
 		tx = txItf.(*sql.Tx)
