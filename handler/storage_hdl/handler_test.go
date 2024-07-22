@@ -41,11 +41,10 @@ func TestHandler(t *testing.T) {
 	a := lib_model.DeviceBase{
 		DeviceData: lib_model.DeviceData{
 			DeviceDataBase: lib_model.DeviceDataBase{
-				ID:    id,
-				Ref:   "test",
-				Name:  "test",
-				State: "test",
-				Type:  "test",
+				ID:   id,
+				Ref:  "test",
+				Name: "test",
+				Type: "test",
 				Attributes: []lib_model.DeviceAttribute{
 					{
 						Key:   "test",
@@ -99,7 +98,6 @@ func TestHandler(t *testing.T) {
 	t.Run("update device", func(t *testing.T) {
 		a.Ref = "test2"
 		a.Name = "test2"
-		a.State = "test2"
 		a.Type = "test2"
 		a.Created = time.Now().Round(0)
 		a.Updated = time.Now().Round(0)
@@ -150,23 +148,6 @@ func TestHandler(t *testing.T) {
 		err = h.UpdateUserData(context.Background(), nil, "2", lib_model.DeviceUserData{})
 		if err == nil {
 			t.Error("expected error")
-		}
-	})
-	t.Run("update states", func(t *testing.T) {
-		ts := time.Now().Round(0)
-		err = h.UpdateStates(context.Background(), nil, "test2", lib_model.Offline, ts)
-		if err != nil {
-			t.Error(err)
-		}
-		b, err := h.Read(context.Background(), id)
-		if err != nil {
-			t.Error(err)
-		}
-		if b.State != lib_model.Offline {
-			t.Error("expected", lib_model.Offline, "got", b.State)
-		}
-		if b.Updated != ts {
-			t.Error("expected", ts, "got", b.Updated)
 		}
 	})
 	t.Run("delete device", func(t *testing.T) {

@@ -23,7 +23,6 @@ type DevicesStorageHandler interface {
 	ReadAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.DeviceBase, error)
 	Update(ctx context.Context, tx driver.Tx, deviceBase lib_model.DeviceData) error
 	UpdateUserData(ctx context.Context, tx driver.Tx, id string, userData lib_model.DeviceUserData) error
-	UpdateStates(ctx context.Context, tx driver.Tx, ref string, state lib_model.DeviceState, timestamp time.Time) error
 	Delete(ctx context.Context, tx driver.Tx, id string) error
 }
 

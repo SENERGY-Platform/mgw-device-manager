@@ -30,7 +30,7 @@ func (h *Handler) BeginTransaction(ctx context.Context) (driver.Tx, error) {
 
 func (h *Handler) ReadAll(ctx context.Context, filter lib_model.DevicesFilter) (map[string]lib_model.DeviceBase, error) {
 	fc, val := genFilter(filter)
-	q := "SELECT id, ref, name, state, type, created, updated, usr_name, usr_updated FROM devices"
+	q := "SELECT id, ref, name, type, created, updated, usr_name, usr_updated FROM devices"
 	if fc != "" {
 		q += fc
 	}
@@ -48,7 +48,7 @@ func (h *Handler) ReadAll(ctx context.Context, filter lib_model.DevicesFilter) (
 	for devRows.Next() {
 		var device lib_model.DeviceBase
 		var created, updated, usrUpdated string
-		if err = devRows.Scan(&device.ID, &device.Ref, &device.Name, &device.State, &device.Type, &created, &updated, &device.UserData.Name, &usrUpdated); err != nil {
+		if err = devRows.Scan(&device.ID, &device.Ref, &device.Name, &device.Type, &created, &updated, &device.UserData.Name, &usrUpdated); err != nil {
 			return nil, lib_model.NewInternalError(err)
 		}
 		device.Created, err = stringToTime(created)
@@ -101,7 +101,7 @@ func (h *Handler) Create(ctx context.Context, txItf driver.Tx, device lib_model.
 		}
 		defer tx.Rollback()
 	}
-	_, err := tx.ExecContext(ctx, "INSERT INTO devices (id, ref, name, state, type, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?);", device.ID, device.Ref, device.Name, device.State, device.Type, timeToString(device.Created), timeToString(device.Updated))
+	_, err := tx.ExecContext(ctx, "INSERT INTO devices (id, ref, name, type, created, updated) VALUES (?, ?, ?, ?, ?, ?);", device.ID, device.Ref, device.Name, device.Type, timeToString(device.Created), timeToString(device.Updated))
 	if err != nil {
 		return lib_model.NewInternalError(err)
 	}
@@ -119,10 +119,10 @@ func (h *Handler) Create(ctx context.Context, txItf driver.Tx, device lib_model.
 }
 
 func (h *Handler) Read(ctx context.Context, id string) (lib_model.DeviceBase, error) {
-	row := h.db.QueryRowContext(ctx, "SELECT id, ref, name, state, type, created, updated, usr_name, usr_updated FROM devices WHERE id = ?;", id)
+	row := h.db.QueryRowContext(ctx, "SELECT id, ref, name, type, created, updated, usr_name, usr_updated FROM devices WHERE id = ?;", id)
 	var device lib_model.DeviceBase
 	var created, updated, usrUpdated string
-	err := row.Scan(&device.ID, &device.Ref, &device.Name, &device.State, &device.Type, &created, &updated, &device.UserData.Name, &usrUpdated)
+	err := row.Scan(&device.ID, &device.Ref, &device.Name, &device.Type, &created, &updated, &device.UserData.Name, &usrUpdated)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return lib_model.DeviceBase{}, lib_model.NewNotFoundError(err)
@@ -175,7 +175,7 @@ func (h *Handler) Update(ctx context.Context, txItf driver.Tx, deviceBase lib_mo
 		}
 		defer tx.Rollback()
 	}
-	res, err := tx.ExecContext(ctx, "UPDATE devices SET ref = ?, name = ?, state = ?, type = ?, created = ?, updated = ? WHERE `id` = ?", deviceBase.Ref, deviceBase.Name, deviceBase.State, deviceBase.Type, timeToString(deviceBase.Created), timeToString(deviceBase.Updated), deviceBase.ID)
+	res, err := tx.ExecContext(ctx, "UPDATE devices SET ref = ?, name = ?, type = ?, created = ?, updated = ? WHERE `id` = ?", deviceBase.Ref, deviceBase.Name, deviceBase.Type, timeToString(deviceBase.Created), timeToString(deviceBase.Updated), deviceBase.ID)
 	if err != nil {
 		return lib_model.NewInternalError(err)
 	}
@@ -242,19 +242,6 @@ func (h *Handler) UpdateUserData(ctx context.Context, txItf driver.Tx, id string
 	return nil
 }
 
-func (h *Handler) UpdateStates(ctx context.Context, txItf driver.Tx, ref string, state lib_model.DeviceState, timestamp time.Time) error {
-	execContext := h.db.ExecContext
-	if txItf != nil {
-		tx := txItf.(*sql.Tx)
-		execContext = tx.ExecContext
-	}
-	_, err := execContext(ctx, "UPDATE devices SET state = ?, updated = ? WHERE `ref` = ?", state, timeToString(timestamp), ref)
-	if err != nil {
-		return lib_model.NewInternalError(err)
-	}
-	return nil
-}
-
 func (h *Handler) Delete(ctx context.Context, txItf driver.Tx, id string) error {
 	execContext := h.db.ExecContext
 	if txItf != nil {
@@ -298,10 +285,6 @@ func genFilter(filter lib_model.DevicesFilter) (string, []any) {
 		for _, id := range ids {
 			val = append(val, id)
 		}
-	}
-	if filter.State != "" {
-		fc = append(fc, "state = ?")
-		val = append(val, filter.State)
 	}
 	if filter.Type != "" {
 		fc = append(fc, "type = ?")

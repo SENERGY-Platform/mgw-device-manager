@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS devices
     id          TEXT NOT NULL,
     ref         TEXT NOT NULL,
     name        TEXT DEFAULT '',
-    state       TEXT DEFAULT '',
     type        TEXT NOT NULL,
     created     TEXT NOT NULL,
     updated     TEXT DEFAULT '',
