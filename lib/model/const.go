@@ -1,8 +1,9 @@
 package model
 
 const (
-	Online  DeviceState = "online"
-	Offline DeviceState = "offline"
+	Online       DeviceState = "online"
+	Offline      DeviceState = "offline"
+	NotAvailable DeviceState = "n/a"
 )
 
 const (
