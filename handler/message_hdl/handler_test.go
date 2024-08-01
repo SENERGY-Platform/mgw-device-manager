@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	sb_util "github.com/SENERGY-Platform/go-service-base/util"
 	lib_model "github.com/SENERGY-Platform/mgw-device-manager/lib/model"
 	"github.com/SENERGY-Platform/mgw-device-manager/util"
 	"reflect"
@@ -12,7 +11,7 @@ import (
 )
 
 func TestHandler_HandleMessage(t *testing.T) {
-	util.InitLogger(sb_util.LoggerConfig{Terminal: true, Level: 4})
+	util.InitLogger(util.LoggerConfig{Terminal: true, Level: 4})
 	t.Run("set device", func(t *testing.T) {
 		mockDHdl := &mockDeviceHdl{
 			Devices:    make(map[string]lib_model.DeviceDataBase),
